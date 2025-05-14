@@ -3,6 +3,7 @@ package com.clothingstore.clothing_store_api.util;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,11 @@ import java.util.Map;
 @Component
 public class JwtUtil {
     private final Key SECRET_KEY;
-    private final long EXPIRATION_TIME = 1000 * 60 * 60;
+    @Value("${jwt.accessTokenExpirationMs:3600000}")
+    private  long accessTokenExpirationMs;
+
+    @Value("${jwt.refreshTokenExpirationMs:604800000}")
+    private  long refreshTokenExpirationMs;
 
     public JwtUtil() {
         Dotenv dotenv = Dotenv.configure().directory("./").ignoreIfMissing().load();
@@ -32,7 +37,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
                 .signWith(SECRET_KEY)
                 .compact();
     }
@@ -54,7 +59,14 @@ public class JwtUtil {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
     }
-
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationMs))
+                .signWith(SECRET_KEY)
+                .compact();
+    }
     private boolean isTokenExpired(String token) {
         try {
             return Jwts.parser()
@@ -67,5 +79,11 @@ public class JwtUtil {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid JWT token", e);
         }
+    }
+    public Map<String, String> generateTokenPair(String username, String role) {
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("access_token", generateToken(username, role));
+        tokens.put("refresh_token", generateRefreshToken(username));
+        return tokens;
     }
 }

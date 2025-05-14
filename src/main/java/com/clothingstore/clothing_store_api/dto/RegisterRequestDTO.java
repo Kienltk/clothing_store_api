@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class RegisterRequestDTO {
     @NotBlank(message = "First Name is required")
@@ -17,8 +19,7 @@ public class RegisterRequestDTO {
     private String email;
     @NotBlank(message = "Address is required")
     private String address;
-    @NotBlank(message = "Dob is required")
-    private String dob;
+    private Date dob;
     @NotBlank(message = "Username is required")
     private String username;
     @NotBlank(message = "Password is required")
