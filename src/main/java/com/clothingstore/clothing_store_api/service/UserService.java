@@ -65,7 +65,14 @@ public class UserService {
         return jwtUtil.generateToken(username, user.getRole());
     }
 
+    public void updatePassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPasswordHash(hashedPassword);
+        userRepository.save(user);
+    }
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new ValidationException("Invalid username or password"));

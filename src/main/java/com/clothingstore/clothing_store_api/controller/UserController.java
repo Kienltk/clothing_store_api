@@ -10,6 +10,7 @@ import com.clothingstore.clothing_store_api.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,7 +39,7 @@ public class UserController {
     }
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponseDTO> refreshToken(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refresh_token");
+        String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -50,9 +51,28 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
     }
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request,
+                                            @AuthenticationPrincipal User authenticatedUser) {
+        String email = request.get("email");
+        String newPassword = request.get("newPassword");
+
+        if (email == null || newPassword == null || email.isEmpty() || newPassword.isEmpty()) {
+            return ResponseEntity.badRequest().body("Email and new password are required.");
+        }
+
+        if (!email.equalsIgnoreCase(authenticatedUser.getEmail())) {
+            return ResponseEntity.status(403).body("Email does not match the logged-in user.");
+        }
+
+        userService.updatePassword(authenticatedUser.getId(), newPassword);
+
+        return ResponseEntity.ok("Password updated successfully.");
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refresh_token");
+        String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
