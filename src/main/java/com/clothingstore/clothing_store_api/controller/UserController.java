@@ -38,7 +38,7 @@ public class UserController {
     }
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponseDTO> refreshToken(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refresh_token");
+        String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -52,7 +52,7 @@ public class UserController {
     }
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refresh_token");
+        String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
