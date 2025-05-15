@@ -3,6 +3,7 @@ package com.clothingstore.clothing_store_api.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -22,8 +23,8 @@ public class Order {
     @Temporal(TemporalType.TIMESTAMP)
     private Date paymentTime;
 
-    @Column(name = "payment_method")
-    private String paymentMethod;
+    @Column(name = "total")
+    private BigDecimal total;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;

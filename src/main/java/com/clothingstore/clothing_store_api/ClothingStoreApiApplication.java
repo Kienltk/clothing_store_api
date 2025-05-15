@@ -10,7 +10,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.io.File;
 
 @SpringBootApplication
-//@OpenAPIDefinition(info = @Info(title = "Clothing Store API", version = "1.0", description = "API for Clothing Store"))
 public class ClothingStoreApiApplication {
 
     public static void main(String[] args) {

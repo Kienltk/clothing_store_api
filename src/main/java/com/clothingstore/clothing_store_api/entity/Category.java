@@ -16,6 +16,6 @@ public class Category {
     @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductCategory> productCategories;
+    @ManyToMany(mappedBy = "categories")
+    private List<Product> products;
 }

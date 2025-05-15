@@ -13,8 +13,8 @@ public class Size {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "size_name", nullable = false, unique = true)
-    private String sizeName;
+    @Column(name = "size", nullable = false, unique = true)
+    private String size;
 
     @OneToMany(mappedBy = "size", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductSize> productSizes;

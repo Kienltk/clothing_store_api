@@ -11,13 +11,13 @@ public class ProductImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @ManyToOne
+    @JoinColumn(name = "product_color_id", nullable = false)
+    private ProductColor productColor;
 
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "is_main_image", nullable = false)
+    @Column(name = "is_main_image")
     private Boolean isMainImage;
 }
