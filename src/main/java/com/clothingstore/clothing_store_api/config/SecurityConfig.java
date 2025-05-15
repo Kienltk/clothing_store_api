@@ -1,8 +1,8 @@
 package com.clothingstore.clothing_store_api.config;
 
 
-import com.clothingstore.clothing_store_api.entity.User;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
+import com.clothingstore.clothing_store_api.service.CustomUserDetailsService;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -23,9 +22,11 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
-    public SecurityConfig(JwtUtil jwtUtil, UserRepository userRepository) {
+    private final CustomUserDetailsService customUserDetailsService;
+    public SecurityConfig(JwtUtil jwtUtil, UserRepository userRepository, CustomUserDetailsService customUserDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Bean
@@ -33,11 +34,12 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register","/api/auth/logout", "/api/auth/refresh",
-                                "/api/auth/login", "/v3/api-docs/**", "/v3/api-docs", "/swagger-ui/**",
-                                "/swagger-ui.html", "/error").permitAll()
+                        .requestMatchers("api/auth/refresh","/api/auth/register","/api/auth/forgot-password",
+                                "/api/auth/logout","/api/auth/login", "/v3/api-docs/**", "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
+                .userDetailsService(customUserDetailsService)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -56,19 +58,11 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> {
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            return org.springframework.security.core.userdetails.User
-                    .withUsername(user.getUsername())
-                    .password(user.getPasswordHash())
-                    .roles(user.getRole())
-                    .build();
-        };
+        return customUserDetailsService;
     }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtil, userDetailsService());
+        return new JwtAuthenticationFilter(jwtUtil, customUserDetailsService);
     }
 }

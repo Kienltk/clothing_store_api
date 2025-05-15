@@ -16,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -67,7 +64,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
         try {
             userService.updatePasswordWithUsernameOrEmail(
                     request.getUsername(),
@@ -81,11 +78,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    @PostMapping("/change-password")
+    @PutMapping("/change-password")
     @PostAuthorize("returnObject.username == authentication.name")
     public ResponseEntity<?> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody ChangePasswordRequestDTO request
+            @RequestBody @Valid ChangePasswordRequestDTO request
     ) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");

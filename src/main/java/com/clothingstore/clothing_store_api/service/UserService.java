@@ -8,8 +8,6 @@ import com.clothingstore.clothing_store_api.repository.UserRepository;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +28,7 @@ public class UserService {
         this.tokenService = tokenService;
     }
 
-    public boolean register(RegisterDTO registerRequest) {
+    public void register(RegisterDTO registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
@@ -48,7 +46,7 @@ public class UserService {
                 .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
                 .role("USER")
                 .build();
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
     public String refreshAccessToken(String refreshToken) {
