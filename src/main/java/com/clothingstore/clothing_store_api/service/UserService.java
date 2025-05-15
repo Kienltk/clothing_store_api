@@ -2,16 +2,14 @@ package com.clothingstore.clothing_store_api.service;
 
 import com.clothingstore.clothing_store_api.dto.LoginRequestDTO;
 import com.clothingstore.clothing_store_api.dto.LoginResponseDTO;
-import com.clothingstore.clothing_store_api.dto.RegisterRequestDTO;
+import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Map;
 
@@ -28,7 +26,7 @@ public class UserService {
         this.tokenService = tokenService;
     }
 
-    public User register(RegisterRequestDTO registerRequest) {
+    public boolean register(RegisterDTO registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
@@ -46,8 +44,11 @@ public class UserService {
         user.setUsername(registerRequest.getUsername());
         user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
         user.setRole("USER");
-        return userRepository.save(user);
+        userRepository.save(user);
+
+        return true;
     }
+
     public String refreshAccessToken(String refreshToken) {
         if (tokenService.isTokenBlacklisted(refreshToken)) {
             throw new RuntimeException("Refresh token has been blacklisted");

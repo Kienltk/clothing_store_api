@@ -3,7 +3,7 @@ package com.clothingstore.clothing_store_api.controller;
 import com.clothingstore.clothing_store_api.dto.LoginRequestDTO;
 import com.clothingstore.clothing_store_api.dto.LoginResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RefreshResponseDTO;
-import com.clothingstore.clothing_store_api.dto.RegisterRequestDTO;
+import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
 import com.clothingstore.clothing_store_api.service.TokenService;
 import com.clothingstore.clothing_store_api.service.UserService;
@@ -26,9 +26,9 @@ public class UserController {
     private TokenService tokenService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterRequestDTO registerRequest) {
-        User user = userService.register(registerRequest);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<RegisterDTO> register(@Valid @RequestBody RegisterDTO registerRequest) {
+        userService.register(registerRequest);
+        return ResponseEntity.ok(registerRequest);
     }
 
     @PostMapping("/login")

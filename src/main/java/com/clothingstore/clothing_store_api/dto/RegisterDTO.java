@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class RegisterRequestDTO {
+public class RegisterDTO {
     @NotBlank(message = "First Name is required")
     private String firstName;
     @NotBlank(message = "Last Name is required")
