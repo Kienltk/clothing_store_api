@@ -11,13 +11,13 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @ManyToOne
+    @JoinColumn(name = "product_size_id", nullable = false)
+    private ProductSize productSize;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
