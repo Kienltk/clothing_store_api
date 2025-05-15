@@ -9,11 +9,13 @@ import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -21,6 +23,7 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
+
     public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenService tokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -35,19 +38,20 @@ public class UserService {
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
-
-        User user = new User();
-        user.setFirstName(registerRequest.getFirstName());
-        user.setLastName(registerRequest.getLastName());
-        user.setPhoneNumber(registerRequest.getPhoneNumber());
-        user.setEmail(registerRequest.getEmail());
-        user.setAddress((registerRequest.getAddress()));
-        user.setDob((registerRequest.getDob()));
-        user.setUsername(registerRequest.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole("USER");
+        User user = User.builder()
+                .firstName(registerRequest.getFirstName())
+                .lastName(registerRequest.getLastName())
+                .phoneNumber(registerRequest.getPhoneNumber())
+                .email(registerRequest.getEmail())
+                .address(registerRequest.getAddress())
+                .dob(registerRequest.getDob())
+                .username(registerRequest.getUsername())
+                .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
+                .role("USER")
+                .build();
         return userRepository.save(user);
     }
+
     public String refreshAccessToken(String refreshToken) {
         if (tokenService.isTokenBlacklisted(refreshToken)) {
             throw new RuntimeException("Refresh token has been blacklisted");
@@ -65,14 +69,6 @@ public class UserService {
         return jwtUtil.generateToken(username, user.getRole());
     }
 
-    public void updatePassword(Long userId, String newPassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String hashedPassword = passwordEncoder.encode(newPassword);
-        user.setPasswordHash(hashedPassword);
-        userRepository.save(user);
-    }
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new ValidationException("Invalid username or password"));
@@ -87,8 +83,31 @@ public class UserService {
         response.setRefreshToken(tokens.get("refresh_token"));
         return response;
     }
-    public void logout(String userId) {
-        tokenService.deleteToken(userId, "access");
-        tokenService.deleteToken(userId, "refresh");
+
+    public void updatePasswordWithUsernameOrEmail(String username, String info, String newPassword) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+
+        if (userOptional.isEmpty()) {
+            throw new ValidationException("User not found with given username");
+        }
+
+        User user = userOptional.get();
+
+        boolean matchesInfo = info.equals(user.getEmail()) || info.equals(user.getPhoneNumber());
+
+        if (!matchesInfo) {
+            throw new ValidationException("Provided info does not match.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
+    public void changePassword(User user, String oldPassword, String newPassword) {
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Old password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
 }
