@@ -20,12 +20,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
 
     private final CustomUserDetailsService customUserDetailsService;
-    public SecurityConfig(JwtUtil jwtUtil, UserRepository userRepository, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
         this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
         this.customUserDetailsService = customUserDetailsService;
     }
 
@@ -35,8 +33,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("api/auth/refresh","/api/auth/register","/api/auth/forgot-password",
-                                "/api/auth/logout","/api/auth/login", "/v3/api-docs/**", "/swagger-ui/**",
-                                "/swagger-ui.html").permitAll()
+                                "/api/auth/logout","/api/auth/login","/api/products/**","/v3/api-docs/**",
+                                "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(customUserDetailsService)

@@ -3,6 +3,7 @@ package com.clothingstore.clothing_store_api.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,6 +17,13 @@ public class Category {
     @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Category> children = new ArrayList<>();
+
     @ManyToMany(mappedBy = "categories")
-    private List<Product> products;
+    private List<Product> products = new ArrayList<>();
 }
