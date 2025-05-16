@@ -7,6 +7,7 @@ import com.clothingstore.clothing_store_api.dto.LoginResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RefreshResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
+import com.clothingstore.clothing_store_api.response.ResponseObject;
 import com.clothingstore.clothing_store_api.service.TokenService;
 import com.clothingstore.clothing_store_api.service.UserService;
 import jakarta.validation.Valid;
@@ -15,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -45,12 +45,8 @@ public class UserController {
         if (refreshToken == null || refreshToken.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        try {
-            String newAccessToken = userService.refreshAccessToken(refreshToken);
-            return ResponseEntity.ok(new RefreshResponseDTO(newAccessToken));
-        } catch (Exception e) {
-            return ResponseEntity.status(401).build();
-        }
+        String newAccessToken = userService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(new RefreshResponseDTO(newAccessToken));
     }
 
     @PostMapping("/logout")
@@ -64,20 +60,16 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
-        try {
-            userService.updatePasswordWithUsernameOrEmail(
-                    request.getUsername(),
-                    request.getInfo(),
-                    request.getNewPassword()
-            );
-            return ResponseEntity.ok("Password updated successfully");
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<ResponseObject<String>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        userService.updatePasswordWithUsernameOrEmail(
+                request.getUsername(),
+                request.getInfo(),
+                request.getNewPassword()
+        );
+        ResponseObject<String> response = new ResponseObject<>(200, "Password updated successfully", null);
+        return ResponseEntity.ok(response);
     }
+
     @PutMapping("/change-password")
     @PostAuthorize("returnObject.username == authentication.name")
     public ResponseEntity<?> changePassword(

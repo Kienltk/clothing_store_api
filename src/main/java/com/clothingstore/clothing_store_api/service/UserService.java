@@ -4,10 +4,12 @@ import com.clothingstore.clothing_store_api.dto.LoginRequestDTO;
 import com.clothingstore.clothing_store_api.dto.LoginResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
+import com.clothingstore.clothing_store_api.exception.InvalidRefreshTokenException;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +53,7 @@ public class UserService {
 
     public String refreshAccessToken(String refreshToken) {
         if (tokenService.isTokenBlacklisted(refreshToken)) {
-            throw new RuntimeException("Refresh token has been blacklisted");
+            throw new InvalidRefreshTokenException("Refresh token has expired");
         }
 
         String username = jwtUtil.extractUsername(refreshToken);
@@ -60,7 +62,7 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (!jwtUtil.isTokenValid(refreshToken, username)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new InvalidRefreshTokenException("Invalid refresh token");
         }
 
         return jwtUtil.generateToken(username, user.getRole());

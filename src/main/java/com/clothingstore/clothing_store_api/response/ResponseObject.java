@@ -6,8 +6,8 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class ResponseObject <T> {
+public class ResponseObject<T>  {
+    private int code;
     private String message;
     private T data;
 }
