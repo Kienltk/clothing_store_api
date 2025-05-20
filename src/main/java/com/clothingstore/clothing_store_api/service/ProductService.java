@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
+
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;

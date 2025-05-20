@@ -8,13 +8,13 @@ import com.clothingstore.clothing_store_api.dto.RefreshResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
 import com.clothingstore.clothing_store_api.response.ResponseObject;
+import com.clothingstore.clothing_store_api.service.SendMailService;
 import com.clothingstore.clothing_store_api.service.TokenService;
 import com.clothingstore.clothing_store_api.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,64 +23,63 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {
+
     @Autowired
     private UserService userService;
     @Autowired
     private TokenService tokenService;
+    @Autowired
+    private SendMailService emailService;
+
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterDTO> register(@Valid @RequestBody RegisterDTO registerRequest) {
+    public ResponseEntity<ResponseObject<RegisterDTO>> register(@Valid @RequestBody RegisterDTO registerRequest) {
         userService.register(registerRequest);
-        return ResponseEntity.ok(registerRequest);
+        return ResponseEntity.ok(new ResponseObject<>(200, "Register successful", registerRequest));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<ResponseObject<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         LoginResponseDTO response = userService.login(loginRequest);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ResponseObject<>(200, "Login successful", response));
     }
+
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponseDTO> refreshToken(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ResponseObject<RefreshResponseDTO>> refreshToken(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseObject<>(400, "Refresh token is missing", null));
         }
         String newAccessToken = userService.refreshAccessToken(refreshToken);
-        return ResponseEntity.ok(new RefreshResponseDTO(newAccessToken));
+        return ResponseEntity.ok(new ResponseObject<>(200, "Token refreshed successfully", new RefreshResponseDTO(newAccessToken)));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ResponseObject<String>> logout(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
         if (refreshToken == null || refreshToken.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseObject<>(400, "Refresh token is missing", null));
         }
         tokenService.blacklistRefreshToken(refreshToken);
-
-        return ResponseEntity.ok().build();
-    }
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ResponseObject<String>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
-        userService.updatePasswordWithUsernameOrEmail(
-                request.getUsername(),
-                request.getInfo(),
-                request.getNewPassword()
-        );
-        ResponseObject<String> response = new ResponseObject<>(200, "Password updated successfully", null);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ResponseObject<>(200, "Logged out successfully", null));
     }
 
     @PutMapping("/change-password")
-    @PostAuthorize("returnObject.username == authentication.name")
-    public ResponseEntity<?> changePassword(
+    public ResponseEntity<ResponseObject<String>> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ChangePasswordRequestDTO request
     ) {
         if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject<>(401, "User not authenticated", null));
         }
         User user = userDetails.getUser();
         userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
-        return ResponseEntity.ok("Password changed successfully");
+        return ResponseEntity.ok(new ResponseObject<>(200, "Password changed successfully", null));
     }
 }

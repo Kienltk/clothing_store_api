@@ -9,7 +9,6 @@ import com.clothingstore.clothing_store_api.repository.UserRepository;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -75,31 +74,11 @@ public class UserService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             throw new ValidationException("Invalid username or password");
         }
-
         Map<String, String> tokens = jwtUtil.generateTokenPair(user.getUsername(), user.getRole());
         LoginResponseDTO response = new LoginResponseDTO();
         response.setAccessToken(tokens.get("access_token"));
         response.setRefreshToken(tokens.get("refresh_token"));
         return response;
-    }
-
-    public void updatePasswordWithUsernameOrEmail(String username, String info, String newPassword) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-
-        if (userOptional.isEmpty()) {
-            throw new ValidationException("User not found with given username");
-        }
-
-        User user = userOptional.get();
-
-        boolean matchesInfo = info.equals(user.getEmail()) || info.equals(user.getPhoneNumber());
-
-        if (!matchesInfo) {
-            throw new ValidationException("Provided info does not match.");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
     }
     public void changePassword(User user, String oldPassword, String newPassword) {
         if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
@@ -108,5 +87,4 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
-
 }
