@@ -71,7 +71,6 @@ public class UserController {
     }
 
     @PutMapping("/change-password")
-    @PostAuthorize("returnObject.username == authentication.name")
     public ResponseEntity<?> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ChangePasswordRequestDTO request
