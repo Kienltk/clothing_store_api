@@ -62,7 +62,7 @@ public class ProductService {
         }
 
         Map<String, Object> productDetails = mapProductToDetails(product, userId);
-        productDetails.put("stockDetail", getStockDetails(product));
+        // productDetails.put("stockDetail", getStockDetails(product));
 
         Category parentCategory = getParentCategory(product);
         Map<String, List<Map<String, Object>>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId(), true);
@@ -123,7 +123,7 @@ public class ProductService {
             put("discount", discount);
             put("status", product.getStatus());
             put("url_img", mainImageUrl);
-            put("colors", colors);
+            put("stockDetail", getStockDetails(product));
             put("isFavorite", userId != null && favorites.stream().anyMatch(fav -> fav.getProduct().getId().equals(product.getId())));
         }};
     }
