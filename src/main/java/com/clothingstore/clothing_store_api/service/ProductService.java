@@ -1,5 +1,6 @@
 package com.clothingstore.clothing_store_api.service;
 
+import com.clothingstore.clothing_store_api.dto.*;
 import com.clothingstore.clothing_store_api.entity.*;
 import com.clothingstore.clothing_store_api.repository.CategoryRepository;
 import com.clothingstore.clothing_store_api.repository.FavoriteRepository;
@@ -24,18 +25,18 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
     }
 
-    public Map<String, List<Map<String, Object>>> getProductsByCategory(Long userId, Long categoryId, boolean isParent) {
+    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId, boolean isParent) {
         List<Category> categories = isParent ?
                 (categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId))
                 : categoryRepository.findByParentId(categoryId);
         return getProductsGroupedByCategories(categories, userId);
     }
 
-    public Map<String, Object> searchProducts(String productName, Long userId) {
+    public SearchProductDTO searchProducts(String productName, Long userId) {
         List<Product> products = productRepository.findByProductNameContainingIgnoreCase(productName.trim());
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
         String message;
-        List<Map<String, Object>> productDetailsList;
+        List<ProductDTO> productDetailsList;
 
         if (products.isEmpty()) {
             message = "Not found";
@@ -45,39 +46,33 @@ public class ProductService {
             int productCount = products.size();
             message = "Found " + productCount + " products";
             productDetailsList = mapProductsToList(products, userId);
-            result.put("total", productCount);
+            data.put("total", productCount);
         }
+        data.put("products", productDetailsList);
 
-        result.put("products", productDetailsList);
-        return new HashMap<String, Object>() {{
-            put("message", message);
-            put("data", result);
-        }};
+        return new SearchProductDTO(message, data);
     }
 
-    public Map<String, Object> getProductDetails(Long productId, Long userId) {
+    public ProductDetailDTO getProductDetails(Long productId, Long userId) {
         Product product = productRepository.findProductById(productId);
         if (product == null) {
             return null;
         }
 
-        Map<String, Object> productDetails = mapProductToDetails(product, userId);
-        productDetails.put("stockDetail", getStockDetails(product));
-
+        ProductDTO productDetails = mapProductToDetails(product, userId);
         Category parentCategory = getParentCategory(product);
-        Map<String, List<Map<String, Object>>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId(), true);
-        List<Map<String, Object>> relatedProducts = relatedProductsMap.values().stream()
+        Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId(), true);
+        List<ProductDTO> relatedProducts = relatedProductsMap.values().stream()
                 .flatMap(List::stream)
-                .filter(p -> !p.get("id").equals(productId))
+                .filter(p -> !p.getId().equals(productId))
                 .limit(MAX_RELATED_PRODUCTS)
                 .collect(Collectors.toList());
 
-        productDetails.put("relatedProducts", relatedProducts);
-        return productDetails;
+        return new ProductDetailDTO(productDetails, relatedProducts);
     }
 
-    private Map<String, List<Map<String, Object>>> getProductsGroupedByCategories(List<Category> categories, Long userId) {
-        Map<String, List<Map<String, Object>>> categoryProductsMap = new HashMap<>();
+    private Map<String, List<ProductDTO>> getProductsGroupedByCategories(List<Category> categories, Long userId) {
+        Map<String, List<ProductDTO>> categoryProductsMap = new HashMap<>();
         for (Category category : categories) {
             List<Product> products = productRepository.findByCategoriesId(category.getId());
             categoryProductsMap.put(category.getCategoryName(), mapProductsToList(products, userId));
@@ -85,18 +80,18 @@ public class ProductService {
         return categoryProductsMap;
     }
 
-    private List<Map<String, Object>> mapProductsToList(List<Product> products, Long userId) {
+    private List<ProductDTO> mapProductsToList(List<Product> products, Long userId) {
         List<Favorite> favorites = userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList();
         return products.stream()
                 .map(product -> mapProductToDetails(product, userId, favorites))
                 .collect(Collectors.toList());
     }
 
-    private Map<String, Object> mapProductToDetails(Product product, Long userId) {
+    private ProductDTO mapProductToDetails(Product product, Long userId) {
         return mapProductToDetails(product, userId, userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList());
     }
 
-    private Map<String, Object> mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
+    private ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
         Date currentDate = new Date();
         BigDecimal discount = product.getDiscounts().stream()
                 .filter(d -> d.getStartSale().before(currentDate) && d.getEndSale().after(currentDate))
@@ -111,39 +106,33 @@ public class ProductService {
                 .findFirst()
                 .orElse("");
 
-        List<String> colors = product.getProductColors().stream()
-                .map(pc -> pc.getColor().getColor())
-                .distinct()
-                .collect(Collectors.toList());
+        Long id = product.getId();
+        String productName = product.getProductName();
+        BigDecimal price = product.getPrice();
+        String status = product.getStatus();
+        List<StockDetailDTO> stockDetailDTO = getStockDetails(product);
+        Boolean isFavorite = userId != null &&
+                favorites.stream().anyMatch(fav -> fav.getProduct().getId().equals(product.getId()));
 
-        return new HashMap<String, Object>() {{
-            put("id", product.getId());
-            put("product name", product.getProductName());
-            put("price", product.getPrice());
-            put("discount", discount);
-            put("status", product.getStatus());
-            put("url_img", mainImageUrl);
-            put("colors", colors);
-            put("isFavorite", userId != null && favorites.stream().anyMatch(fav -> fav.getProduct().getId().equals(product.getId())));
-        }};
+        return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite);
     }
 
-    private List<Map<String, Object>> getStockDetails(Product product) {
+    private List<StockDetailDTO> getStockDetails(Product product) {
         return product.getProductColors().stream()
-                .map(pc -> new HashMap<String, Object>() {{
-                    put("color", pc.getColor().getColor());
-                    put("url", pc.getProductImages().stream()
-                            .filter(img -> Boolean.TRUE.equals(img.getIsMainImage()))
-                            .map(ProductImage::getImageUrl)
-                            .findFirst()
-                            .orElse(""));
-                    put("sizes", pc.getProductSizes().stream()
-                            .map(ps -> new HashMap<String, Object>() {{
-                                put("size", ps.getSize().getSize());
-                                put("stock", ps.getStock());
-                            }})
-                            .collect(Collectors.toList()));
-                }})
+                .map(pc -> new StockDetailDTO(
+                        pc.getColor().getColor(),
+                        pc.getProductImages().stream()
+                                .filter(img -> img.getIsMainImage() != null && img.getIsMainImage())
+                                .map(ProductImage::getImageUrl)
+                                .findFirst()
+                                .orElse(""),
+                        pc.getProductSizes().stream()
+                                .map(ps -> new SizeStockDTO(
+                                        ps.getSize().getSize(),
+                                        ps.getStock()
+                                ))
+                                .collect(Collectors.toList())
+                ))
                 .collect(Collectors.toList());
     }
 
