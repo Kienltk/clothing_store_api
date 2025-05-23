@@ -11,6 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class StockDetailDTO {
     private String color;
-    private String url;
+    private String img;
     private List<SizeStockDTO> sizes;
 }
