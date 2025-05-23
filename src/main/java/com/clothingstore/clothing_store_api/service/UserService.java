@@ -13,7 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -31,10 +30,10 @@ public class UserService {
 
     public void register(RegisterDTO registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new ValidationException("Username already exists");
         }
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new ValidationException("Email already exists");
         }
         User user = User.builder()
                 .firstName(registerRequest.getFirstName())

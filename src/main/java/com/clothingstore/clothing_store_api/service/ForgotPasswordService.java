@@ -30,7 +30,7 @@ public class ForgotPasswordService {
 
     public void sendResetCode(String email) {
         if (!userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email does not exist.");
+            throw new ValidationException("Email does not exist.");
         }
 
         String code = String.valueOf(new Random().nextInt(900000) + 100000);
