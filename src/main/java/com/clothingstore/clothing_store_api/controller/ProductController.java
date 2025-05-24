@@ -22,7 +22,7 @@ public class ProductController {
     }
     @GetMapping
     public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getAllProducts(@RequestParam(required = false) Long userId) {
-        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, null, true);
+        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, null);
         ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
                 "Okkk",
@@ -35,7 +35,7 @@ public class ProductController {
     public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getProductsBySubCategory(
             @PathVariable Long categoryId,
             @RequestParam(required = false) Long userId) {
-        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, categoryId, false);
+        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, categoryId);
         ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
                 "Okkk",
