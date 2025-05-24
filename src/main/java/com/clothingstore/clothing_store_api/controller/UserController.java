@@ -28,8 +28,6 @@ public class UserController {
     private UserService userService;
     @Autowired
     private TokenService tokenService;
-    @Autowired
-    private SendMailService emailService;
 
 
     @PostMapping("/register")

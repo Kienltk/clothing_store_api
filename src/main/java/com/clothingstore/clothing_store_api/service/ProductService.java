@@ -25,10 +25,15 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
     }
 
-    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId, boolean isParent) {
-        List<Category> categories = isParent ?
-                (categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId))
-                : categoryRepository.findByParentId(categoryId);
+//    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId, boolean isParent) {
+//        List<Category> categories = isParent ?
+//                (categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId))
+//                : categoryRepository.findByParentId(categoryId);
+//        return getProductsGroupedByCategories(categories, userId);
+//    }
+
+    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId) {
+        List<Category> categories = categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId);
         return getProductsGroupedByCategories(categories, userId);
     }
 
@@ -61,7 +66,7 @@ public class ProductService {
 
         ProductDTO productDetails = mapProductToDetails(product, userId);
         Category parentCategory = getParentCategory(product);
-        Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId(), true);
+        Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId());
         List<ProductDTO> relatedProducts = relatedProductsMap.values().stream()
                 .flatMap(List::stream)
                 .filter(p -> !p.getId().equals(productId))
@@ -122,7 +127,7 @@ public class ProductService {
                 .map(pc -> new StockDetailDTO(
                         pc.getColor().getColor(),
                         pc.getProductImages().stream()
-                                .filter(img -> img.getIsMainImage() != null && img.getIsMainImage())
+//                                .filter(img -> img.getIsMainImage() != null && img.getIsMainImage())
                                 .map(ProductImage::getImageUrl)
                                 .findFirst()
                                 .orElse(""),
