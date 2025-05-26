@@ -39,7 +39,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("api/auth/refresh","/api/auth/register","/api/auth/forgot-password",
                                 "/api/auth/logout","/api/auth/login","/api/product/**","/v3/api-docs/**",
-                                "/swagger-ui/**", "/swagger-ui.html","api/forgot-password","api/reset-password","api/verify-code").permitAll()
+                                "/swagger-ui/**", "/swagger-ui.html","api/forgot-password","api/reset-password",
+                                "api/verify-code").permitAll()
+                        .requestMatchers("/api/favorites/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(customUserDetailsService)

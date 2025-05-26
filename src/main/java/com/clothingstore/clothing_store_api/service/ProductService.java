@@ -25,16 +25,14 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
     }
 
-//    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId, boolean isParent) {
-//        List<Category> categories = isParent ?
-//                (categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId))
-//                : categoryRepository.findByParentId(categoryId);
-//        return getProductsGroupedByCategories(categories, userId);
-//    }
-
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId) {
         List<Category> categories = categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId);
-        return getProductsGroupedByCategories(categories, userId);
+        Map<String, List<ProductDTO>> categoryProducts = new HashMap<>();
+        for (Category category : categories) {
+            List<Product> products = productRepository.findByCategoriesId(category.getId());
+            categoryProducts.put(category.getCategoryName(), mapProductsToList(products, userId));
+        }
+        return categoryProducts;
     }
 
     public SearchProductDTO searchProducts(String productName, Long userId) {
@@ -64,7 +62,7 @@ public class ProductService {
             return null;
         }
 
-        ProductDTO productDetails = mapProductToDetails(product, userId);
+        ProductDTO productDetails = mapProductToDetails(product, userId, Collections.emptyList());
         Category parentCategory = getParentCategory(product);
         Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId());
         List<ProductDTO> relatedProducts = relatedProductsMap.values().stream()
@@ -76,24 +74,11 @@ public class ProductService {
         return new ProductDetailDTO(productDetails, relatedProducts);
     }
 
-    private Map<String, List<ProductDTO>> getProductsGroupedByCategories(List<Category> categories, Long userId) {
-        Map<String, List<ProductDTO>> categoryProductsMap = new HashMap<>();
-        for (Category category : categories) {
-            List<Product> products = productRepository.findByCategoriesId(category.getId());
-            categoryProductsMap.put(category.getCategoryName(), mapProductsToList(products, userId));
-        }
-        return categoryProductsMap;
-    }
-
     private List<ProductDTO> mapProductsToList(List<Product> products, Long userId) {
         List<Favorite> favorites = userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList();
         return products.stream()
                 .map(product -> mapProductToDetails(product, userId, favorites))
                 .collect(Collectors.toList());
-    }
-
-    private ProductDTO mapProductToDetails(Product product, Long userId) {
-        return mapProductToDetails(product, userId, userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList());
     }
 
     private ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
@@ -127,7 +112,6 @@ public class ProductService {
                 .map(pc -> new StockDetailDTO(
                         pc.getColor().getColor(),
                         pc.getProductImages().stream()
-//                                .filter(img -> img.getIsMainImage() != null && img.getIsMainImage())
                                 .map(ProductImage::getImageUrl)
                                 .findFirst()
                                 .orElse(""),
