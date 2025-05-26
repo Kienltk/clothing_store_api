@@ -40,4 +40,12 @@ public class CartController {
         return ResponseEntity.ok(
                 new ResponseObject<>(200, "Cart item updated successfully.", cartItem));
     }
+    @DeleteMapping
+    public ResponseEntity<ResponseObject<String>> deleteCartItem(
+            @RequestParam Long userId,
+            @RequestParam Long productSizeId) {
+        cartService.deleteCartItem(userId, productSizeId);
+        return ResponseEntity.ok(
+                new ResponseObject<>(200, "Cart item deleted successfully.", null));
+    }
 }

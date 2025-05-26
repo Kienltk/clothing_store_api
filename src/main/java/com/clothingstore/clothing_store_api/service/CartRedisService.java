@@ -70,4 +70,13 @@ public class CartRedisService {
 
         return cartItemMapper.toDTO(cartItem);
     }
+    @CacheEvict(value = "cartItems", key = "#userId")
+    public void deleteCartItem(Long userId, Long productSizeId) {
+        Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
+        if (existingCartItem.isEmpty()) {
+            throw new ValidationException("CartItem not found for userId: " + userId + " and productSizeId: " + productSizeId);
+        }
+
+        cartItemRepository.delete(existingCartItem.get());
+    }
 }
