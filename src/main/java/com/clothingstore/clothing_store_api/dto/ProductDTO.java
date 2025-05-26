@@ -19,4 +19,5 @@ public class ProductDTO {
     private String img;
     private List<StockDetailDTO> stockDetails;
     private Boolean isFavorite;
+    private String slug;
 }

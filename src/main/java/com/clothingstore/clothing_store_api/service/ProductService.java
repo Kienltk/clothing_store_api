@@ -74,6 +74,17 @@ public class ProductService {
         return new ProductDetailDTO(productDetails, relatedProducts);
     }
 
+    public List<ProductDTO> getFavoriteProducts(Long userId) {
+        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+        List<ProductDTO> favoriteProducts = new ArrayList<>();
+        for (Favorite favorite : favorites) {
+            ProductDTO product = mapProductToDetails(favorite.getProduct(), userId, favorites);
+            favoriteProducts.add(product);
+        }
+
+        return favoriteProducts;
+    }
+
     private List<ProductDTO> mapProductsToList(List<Product> products, Long userId) {
         List<Favorite> favorites = userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList();
         return products.stream()
@@ -103,8 +114,9 @@ public class ProductService {
         List<StockDetailDTO> stockDetailDTO = getStockDetails(product);
         Boolean isFavorite = userId != null &&
                 favorites.stream().anyMatch(fav -> fav.getProduct().getId().equals(product.getId()));
+        String slug = product.getSlug();
 
-        return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite);
+        return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite, slug);
     }
 
     private List<StockDetailDTO> getStockDetails(Product product) {

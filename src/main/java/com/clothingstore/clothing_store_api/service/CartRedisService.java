@@ -33,6 +33,7 @@ public class CartRedisService {
 
     @Autowired
     private CartItemHandler cartItemHandler;
+
     @Cacheable(value = "cartItems", key = "#userId")
     public List<CartItemGetDTO> getCartItemsByUserId(Long userId) {
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
