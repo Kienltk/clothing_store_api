@@ -25,7 +25,8 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
     }
 
-    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, Long categoryId) {
+    public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
+        Long categoryId = categoryRepository.findBySlug(slug).getId();
         List<Category> categories = categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId);
         Map<String, List<ProductDTO>> categoryProducts = new HashMap<>();
         for (Category category : categories) {
@@ -56,15 +57,16 @@ public class ProductService {
         return new SearchProductDTO(message, data);
     }
 
-    public ProductDetailDTO getProductDetails(Long productId, Long userId) {
+    public ProductDetailDTO getProductDetails(String slug, Long userId) {
+        Long productId = productRepository.findProductBySlug(slug).getId();
         Product product = productRepository.findProductById(productId);
         if (product == null) {
             return null;
         }
 
         ProductDTO productDetails = mapProductToDetails(product, userId, Collections.emptyList());
-        Category parentCategory = getParentCategory(product);
-        Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory.getId());
+        String parentCategory = getParentCategory(product).getSlug();
+        Map<String, List<ProductDTO>> relatedProductsMap = getProductsByCategory(userId, parentCategory);
         List<ProductDTO> relatedProducts = relatedProductsMap.values().stream()
                 .flatMap(List::stream)
                 .filter(p -> !p.getId().equals(productId))

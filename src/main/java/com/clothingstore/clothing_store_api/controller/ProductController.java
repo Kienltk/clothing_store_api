@@ -33,11 +33,11 @@ public class ProductController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/category/{categoryId}")
+    @GetMapping("/category/{slug}")
     public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getProductsBySubCategory(
-            @PathVariable Long categoryId,
+            @PathVariable String slug,
             @RequestParam(required = false) Long userId) {
-        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, categoryId);
+        Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, slug);
         ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
                 "Okkk",
@@ -59,11 +59,11 @@ public class ProductController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/detail/{productId}")
+    @GetMapping("/detail/{slug}")
     public ResponseEntity<ResponseObject<ProductDetailDTO>> getProductDetails(
-            @PathVariable Long productId,
+            @PathVariable String slug,
             @RequestParam(required = false) Long userId) {
-        ProductDetailDTO result = productService.getProductDetails(productId, userId);
+        ProductDetailDTO result = productService.getProductDetails(slug, userId);
         if (result == null) {
             return new ResponseEntity<>(new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Product not found", null), HttpStatus.NOT_FOUND);
         }
