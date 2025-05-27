@@ -26,7 +26,7 @@ public class ProductService {
     }
 
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
-        Long categoryId = categoryRepository.findBySlug(slug).getId();
+        Long categoryId = slug == null ? null : categoryRepository.findBySlug(slug).getId();
         List<Category> categories = categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId);
         Map<String, List<ProductDTO>> categoryProducts = new HashMap<>();
         for (Category category : categories) {
