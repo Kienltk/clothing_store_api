@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -79,5 +80,37 @@ public class UserController {
         User user = userDetails.getUser();
         userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok(new ResponseObject<>(200, "Password changed successfully", null));
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject<>(401, "User not authenticated", null));
+        }
+        Long userId = userDetails.getUser().getId();
+
+        InfoUserDTO data = userService.getInfoUser(userId);
+        ResponseObject<InfoUserDTO> response = new ResponseObject<>(
+                HttpStatus.OK.value(),
+                "Get Info User success",
+                data
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/user")
+    public ResponseEntity<ResponseObject<String>> getInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @RequestBody InfoUserDTO request) {
+        if (userDetails == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject<>(401, "User not authenticated", null));
+        }
+        User user = userDetails.getUser();
+
+        userService.editInfoUser(user, request);
+        return ResponseEntity.ok(new ResponseObject<>(200, "Info user update successfully", null));
     }
 }

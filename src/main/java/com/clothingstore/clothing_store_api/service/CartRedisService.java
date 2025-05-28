@@ -51,6 +51,7 @@ public class CartRedisService {
 
         return cartItemMapper.toDTO(cartItem);
     }
+
     @CacheEvict(value = "cartItems", key = "#userId")
     public CartItemGetDTO editCartItem(Long userId, CartItemStoreDTO editCartItemDTO) {
         ProductSize productSize = entityFinder.findProductSizeById(editCartItemDTO.getProductSizeId());
@@ -70,6 +71,7 @@ public class CartRedisService {
 
         return cartItemMapper.toDTO(cartItem);
     }
+
     @CacheEvict(value = "cartItems", key = "#userId")
     public void deleteCartItem(Long userId, Long productSizeId) {
         Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);

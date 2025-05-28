@@ -1,5 +1,6 @@
 package com.clothingstore.clothing_store_api.service;
 
+import com.clothingstore.clothing_store_api.dto.InfoUserDTO;
 import com.clothingstore.clothing_store_api.dto.LoginRequestDTO;
 import com.clothingstore.clothing_store_api.dto.LoginResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RegisterDTO;
@@ -12,6 +13,7 @@ import jakarta.validation.ValidationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Map;
 
 @Service
@@ -84,6 +86,30 @@ public class UserService {
             throw new IllegalArgumentException("Old password is incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    public InfoUserDTO getInfoUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+        String email = user.getEmail();
+        String phoneNumber = user.getPhoneNumber();
+        String address = user.getAddress();
+        Date birthday = user.getDob();
+
+        return new InfoUserDTO(firstName, lastName, email, phoneNumber, address, birthday);
+    }
+
+    public void editInfoUser(User user, InfoUserDTO infoUserDTO) {
+        user.setFirstName(infoUserDTO.getFirstName());
+        user.setLastName(infoUserDTO.getLastName());
+        user.setEmail(infoUserDTO.getEmail());
+        user.setPhoneNumber(infoUserDTO.getPhoneNumber());
+        user.setAddress(infoUserDTO.getAddress());
+        user.setDob(infoUserDTO.getBirthday());
+
         userRepository.save(user);
     }
 }
