@@ -4,7 +4,9 @@ import lombok.Data;
 
 @Data
 public class OrderItemRequestDTO {
-    private Long productSizeId;
+    private Long productId;
+    private String color;
+    private String size;
     private Integer quantity;
     private Double discount;
 }

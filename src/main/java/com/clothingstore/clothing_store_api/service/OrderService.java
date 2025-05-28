@@ -22,11 +22,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductSizeRepository productSizeRepository;
+    private final ProductService productService;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductSizeRepository productSizeRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductSizeRepository productSizeRepository, ProductService productService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productSizeRepository = productSizeRepository;
+        this.productService = productService;
     }
 
     public OrderDTO addOrder(Long userId, OrderRequestDTO orderRequest) {
@@ -41,18 +43,20 @@ public class OrderService {
         order.setPaymentTime(new Date());
         order.setOrderItems(new ArrayList<>());
 
+
         BigDecimal orderTotal = BigDecimal.ZERO;
         for (OrderItemRequestDTO itemRequestDTO : orderRequest.getOrderItems()) {
-            Optional<ProductSize> productSizeOpt = productSizeRepository.findById(itemRequestDTO.getProductSizeId());
+            Long productSizeId = productService.mapToProductSizeId(itemRequestDTO.getProductId(), itemRequestDTO.getColor(), itemRequestDTO.getSize());
+            Optional<ProductSize> productSizeOpt = productSizeRepository.findById(productSizeId);
             if (productSizeOpt.isEmpty()) {
-                throw new RuntimeException("Product size not found: " + itemRequestDTO.getProductSizeId());
+                throw new RuntimeException("Product size not found: " + productSizeId);
             }
             ProductSize productSize = productSizeOpt.get();
             ProductColor productColor = productSize.getProductColor();
             Product product = productColor.getProduct();
 
             if (productSize.getStock() < itemRequestDTO.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product size: " + itemRequestDTO.getProductSizeId());
+                throw new RuntimeException("Insufficient stock for product size: " + productSizeId);
             }
 
             BigDecimal price = product.getPrice();

@@ -5,6 +5,7 @@ import com.clothingstore.clothing_store_api.entity.*;
 import com.clothingstore.clothing_store_api.repository.CategoryRepository;
 import com.clothingstore.clothing_store_api.repository.FavoriteRepository;
 import com.clothingstore.clothing_store_api.repository.ProductRepository;
+import com.clothingstore.clothing_store_api.repository.ProductSizeRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,11 +19,13 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
+    private final ProductSizeRepository productSizeRepository;
 
-    public ProductService(CategoryRepository categoryRepository, ProductRepository productRepository, FavoriteRepository favoriteRepository) {
+    public ProductService(CategoryRepository categoryRepository, ProductRepository productRepository, FavoriteRepository favoriteRepository, ProductSizeRepository productSizeRepository) {
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
         this.favoriteRepository = favoriteRepository;
+        this.productSizeRepository = productSizeRepository;
     }
 
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
@@ -145,5 +148,17 @@ public class ProductService {
             category = category.getParent();
         }
         return category;
+    }
+
+    public Long mapToProductSizeId(Long productId, String color, String sizeName) {
+        Optional<ProductSize> productSizeOpt = productSizeRepository
+                .findByProductColorProductIdAndProductColorColorColorAndSizeSize(productId, color, sizeName);
+
+        if (productSizeOpt.isEmpty()) {
+            throw new RuntimeException("Not found with product id " + productId +
+                    ", color=" + color + ", size=" + sizeName);
+        }
+
+        return productSizeOpt.get().getId();
     }
 }

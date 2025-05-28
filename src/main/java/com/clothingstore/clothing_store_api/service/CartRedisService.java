@@ -34,6 +34,9 @@ public class CartRedisService {
     @Autowired
     private CartItemHandler cartItemHandler;
 
+    @Autowired
+    private ProductService productService;
+
     @Cacheable(value = "cartItems", key = "#userId")
     public List<CartItemGetDTO> getCartItemsByUserId(Long userId) {
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
@@ -45,7 +48,8 @@ public class CartRedisService {
     @CacheEvict(value = "cartItems", key = "#userId")
     public CartItemGetDTO addCartItem(Long userId, CartItemStoreDTO addCartItemDTO) {
         User user = entityFinder.findUserById(userId);
-        ProductSize productSize = entityFinder.findProductSizeById(addCartItemDTO.getProductSizeId());
+        Long productSizeId = productService.mapToProductSizeId(addCartItemDTO.getProductId(), addCartItemDTO.getColor(), addCartItemDTO.getSize());
+        ProductSize productSize = entityFinder.findProductSizeById(productSizeId);
 
         CartItem cartItem = cartItemHandler.addOrUpdateCartItem(user, productSize, addCartItemDTO.getQuantity());
 
@@ -54,15 +58,16 @@ public class CartRedisService {
 
     @CacheEvict(value = "cartItems", key = "#userId")
     public CartItemGetDTO editCartItem(Long userId, CartItemStoreDTO editCartItemDTO) {
-        ProductSize productSize = entityFinder.findProductSizeById(editCartItemDTO.getProductSizeId());
+        Long productSizeId = productService.mapToProductSizeId(editCartItemDTO.getProductId(), editCartItemDTO.getColor(), editCartItemDTO.getSize());
+        ProductSize productSize = entityFinder.findProductSizeById(productSizeId);
 
-        Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, editCartItemDTO.getProductSizeId());
+        Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
         if (existingCartItem.isEmpty()) {
-            throw new ValidationException("CartItem not found for userId: " + userId + " and productSizeId: " + editCartItemDTO.getProductSizeId());
+            throw new ValidationException("CartItem not found for userId: " + userId + " and productSizeId: " + productSizeId);
         }
 
         if (productSize.getStock() < editCartItemDTO.getQuantity()) {
-            throw new ValidationException("Insufficient stock for ProductSize id: " + editCartItemDTO.getProductSizeId());
+            throw new ValidationException("Insufficient stock for ProductSize id: " + productSizeId);
         }
 
         CartItem cartItem = existingCartItem.get();
