@@ -79,17 +79,6 @@ public class ProductService {
         return new ProductDetailDTO(productDetails, relatedProducts);
     }
 
-    public List<ProductDTO> getFavoriteProducts(Long userId) {
-        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
-        List<ProductDTO> favoriteProducts = new ArrayList<>();
-        for (Favorite favorite : favorites) {
-            ProductDTO product = mapProductToDetails(favorite.getProduct(), userId, favorites);
-            favoriteProducts.add(product);
-        }
-
-        return favoriteProducts;
-    }
-
     private List<ProductDTO> mapProductsToList(List<Product> products, Long userId) {
         List<Favorite> favorites = userId != null ? favoriteRepository.findByUserId(userId) : Collections.emptyList();
         return products.stream()
@@ -97,7 +86,7 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    private ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
+     ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
         Date currentDate = new Date();
         BigDecimal discount = product.getDiscounts().stream()
                 .filter(d -> d.getStartSale().before(currentDate) && d.getEndSale().after(currentDate))
@@ -150,7 +139,7 @@ public class ProductService {
         return category;
     }
 
-    public Long mapToProductSizeId(Long productId, String color, String sizeName) {
+    Long mapToProductSizeId(Long productId, String color, String sizeName) {
         Optional<ProductSize> productSizeOpt = productSizeRepository
                 .findByProductColorProductIdAndProductColorColorColorAndSizeSize(productId, color, sizeName);
 

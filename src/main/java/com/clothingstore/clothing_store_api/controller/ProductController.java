@@ -23,7 +23,13 @@ public class ProductController {
         this.productService = productService;
     }
     @GetMapping
-    public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getAllProducts(@RequestParam(required = false) Long userId) {
+    public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getAllProducts(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId;
+        if (userDetails == null) {
+            userId = null;
+        } else {
+            userId = userDetails.getUser().getId();
+        }
         Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, null);
         ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
@@ -36,7 +42,13 @@ public class ProductController {
     @GetMapping("/category/{slug}")
     public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getProductsBySubCategory(
             @PathVariable String slug,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId;
+        if (userDetails == null) {
+            userId = null;
+        } else {
+            userId = userDetails.getUser().getId();
+        }
         Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, slug);
         ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
@@ -49,7 +61,13 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseEntity<ResponseObject<Map<String, Object>>> searchProducts(
             @RequestParam String productName,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId;
+        if (userDetails == null) {
+            userId = null;
+        } else {
+            userId = userDetails.getUser().getId();
+        }
         SearchProductDTO result = productService.searchProducts(productName, userId);
         ResponseObject<Map<String, Object>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
@@ -62,7 +80,13 @@ public class ProductController {
     @GetMapping("/detail/{slug}")
     public ResponseEntity<ResponseObject<ProductDetailDTO>> getProductDetails(
             @PathVariable String slug,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId;
+        if (userDetails == null) {
+            userId = null;
+        } else {
+            userId = userDetails.getUser().getId();
+        }
         ProductDetailDTO result = productService.getProductDetails(slug, userId);
         if (result == null) {
             return new ResponseEntity<>(new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Product not found", null), HttpStatus.NOT_FOUND);
@@ -71,24 +95,6 @@ public class ProductController {
                 HttpStatus.OK.value(),
                 "Product details retrieved",
                 result
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @GetMapping("/favorite")
-    public  ResponseEntity<ResponseObject<List<ProductDTO>>> getFavoriteProducts(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new ResponseObject<>(401, "User not authenticated", null));
-        }
-        Long userId = userDetails.getUser().getId();
-
-        List<ProductDTO> data = productService.getFavoriteProducts(userId);
-        ResponseObject<List<ProductDTO>> response = new ResponseObject<>(
-                HttpStatus.OK.value(),
-                "List favorite products",
-                data
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -1,5 +1,6 @@
 package com.clothingstore.clothing_store_api.service;
 
+import com.clothingstore.clothing_store_api.dto.ProductDTO;
 import com.clothingstore.clothing_store_api.entity.Favorite;
 import com.clothingstore.clothing_store_api.entity.Product;
 import com.clothingstore.clothing_store_api.entity.User;
@@ -10,20 +11,31 @@ import com.clothingstore.clothing_store_api.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class FavoriteService {
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
+    private final ProductService productService;
 
-    public FavoriteService(ProductRepository productRepository, FavoriteRepository favoriteRepository, UserRepository userRepository) {
+    public FavoriteService(ProductRepository productRepository, FavoriteRepository favoriteRepository, UserRepository userRepository, ProductService productService) {
         this.productRepository = productRepository;
         this.favoriteRepository = favoriteRepository;
         this.userRepository = userRepository;
+        this.productService = productService;
+    }
+
+    public List<ProductDTO> getFavoriteProducts(Long userId) {
+        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+        List<ProductDTO> favoriteProducts = new ArrayList<>();
+        for (Favorite favorite : favorites) {
+            ProductDTO product = productService.mapProductToDetails(favorite.getProduct(), userId, favorites);
+            favoriteProducts.add(product);
+        }
+
+        return favoriteProducts;
     }
 
     public Map<String, String> addFavorite(Long userId, Long productId) {
