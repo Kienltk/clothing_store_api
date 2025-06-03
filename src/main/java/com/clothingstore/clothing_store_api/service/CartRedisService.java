@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,17 +45,30 @@ public class CartRedisService {
     }
 
     @CacheEvict(value = "cartItems", key = "#userId")
-    public CartItemDTO addOrUpdateCartItem(Long userId, CartItemDTO addCartItemDTO) {
-        Long productSizeId = productService.mapToProductSizeId(addCartItemDTO.getProductId(), addCartItemDTO.getColor(), addCartItemDTO.getSize());
-        Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
-        existingCartItem.ifPresent(cartItem -> cartItemRepository.delete(cartItem));
-
+    public List<CartItemDTO> addOrUpdateCartItem(Long userId, List<CartItemDTO> addCartItemDTO) {
+        List<CartItemDTO> result = new ArrayList<>();
         User user = entityFinder.findUserById(userId);
-        ProductSize productSize = entityFinder.findProductSizeById(productSizeId);
 
-        CartItem cartItem = cartItemHandler.addOrUpdateCartItem(user, productSize, addCartItemDTO.getQuantity());
+        for (CartItemDTO itemDTO : addCartItemDTO) {
+            Long productSizeId = productService.mapToProductSizeId(
+                    itemDTO.getProductId(),
+                    itemDTO.getColor(),
+                    itemDTO.getSize()
+            );
 
-        return cartItemMapper.toDTO(cartItem);
+            ProductSize productSize = entityFinder.findProductSizeById(productSizeId);
+            Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
+            CartItem cartItem = existingCartItem.orElse(new CartItem());
+
+            cartItem.setUser(user);
+            cartItem.setProductSize(productSize);
+            cartItem.setQuantity(itemDTO.getQuantity());
+
+            CartItem savedCartItem = cartItemRepository.save(cartItem);
+            result.add(cartItemMapper.toDTO(savedCartItem));
+        }
+
+        return result;
     }
 
 //    @CacheEvict(value = "cartItems", key = "#userId")

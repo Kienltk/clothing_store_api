@@ -32,16 +32,16 @@ public class CartController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseObject<CartItemDTO>> addCartItem(
+    public ResponseEntity<ResponseObject<List<CartItemDTO>>> addCartItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody CartItemDTO addCartItemDTO) {
+            @RequestBody List<CartItemDTO> addCartItemDTO) {
         if (userDetails == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseObject<>(401, "User not authenticated", null));
         }
         Long userId = userDetails.getUser().getId();
-        CartItemDTO cartItem = cartService.addOrUpdateCartItem(userId, addCartItemDTO);
+        List<CartItemDTO> cartItem = cartService.addOrUpdateCartItem(userId, addCartItemDTO);
         return ResponseEntity.ok(
                 new ResponseObject<>(200, "Cart item added successfully.", cartItem));
     }
