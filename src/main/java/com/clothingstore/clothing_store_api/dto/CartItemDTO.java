@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemGetDTO {
+public class CartItemDTO {
     private Long productId;
     private String productName;
     private String color;
@@ -18,4 +18,6 @@ public class CartItemGetDTO {
     private Integer stock;
     private String imageUrl;
     private Double discountPercent;
+    private String price;
+    private String slug;
 }

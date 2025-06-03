@@ -1,6 +1,6 @@
 package com.clothingstore.clothing_store_api.mapper;
 
-import com.clothingstore.clothing_store_api.dto.CartItemGetDTO;
+import com.clothingstore.clothing_store_api.dto.CartItemDTO;
 import com.clothingstore.clothing_store_api.entity.CartItem;
 import com.clothingstore.clothing_store_api.entity.Discount;
 import org.springframework.stereotype.Component;
@@ -10,8 +10,8 @@ import java.time.ZoneId;
 
 @Component
 public class CartItemMapper {
-    public CartItemGetDTO toDTO(CartItem cartItem) {
-        CartItemGetDTO dto = new CartItemGetDTO();
+    public CartItemDTO toDTO(CartItem cartItem) {
+        CartItemDTO dto = new CartItemDTO();
         dto.setQuantity(cartItem.getQuantity());
         dto.setStock(cartItem.getProductSize().getStock());
         dto.setSize(cartItem.getProductSize().getSize().getSize());
