@@ -10,6 +10,7 @@ import com.clothingstore.clothing_store_api.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,8 @@ public class ProductController {
         SearchProductDTO result = productService.searchProducts(productName, userId);
         return new ResponseEntity<>(new ResponseObject<>(HttpStatus.OK.value(), result.getMessage(), result.getData()), HttpStatus.OK);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ResponseObject<ProductDTO>> addProduct(
            @Valid @RequestBody CreateProductDTO createProductDTO,

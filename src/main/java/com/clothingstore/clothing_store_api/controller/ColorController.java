@@ -52,7 +52,6 @@ public class ColorController {
         ));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<ColorDTO>> updateColor(
             @PathVariable Long id,
@@ -70,7 +69,6 @@ public class ColorController {
         );
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<String>> deleteColor(
             @PathVariable Long id) {

@@ -20,7 +20,6 @@ public class SizeController {
     @Autowired
     private SizeService sizeService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ResponseObject<SizeDTO>> createSize(@Valid @RequestBody SizeDTO sizeDTO) {
         SizeDTO createdSize = sizeService.createSize(sizeDTO);
@@ -47,7 +46,6 @@ public class SizeController {
                 ));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<SizeDTO>> updateSize(@PathVariable Long id,@Valid @RequestBody SizeDTO sizeDTO) {
         SizeDTO updatedSize = sizeService.updateSize(id, sizeDTO);
@@ -56,7 +54,6 @@ public class SizeController {
         );
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<Void>> deleteSize(@PathVariable Long id) {
         sizeService.deleteSize(id);
