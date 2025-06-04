@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/sizes")
+@PreAuthorize("hasRole('ADMIN')")
 public class SizeController {
     @Autowired
     private SizeService sizeService;
