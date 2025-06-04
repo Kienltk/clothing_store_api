@@ -13,7 +13,6 @@ import java.util.Map;
 @NoArgsConstructor
 public class DashboardDTO {
     private BigDecimal totalIncome;
-    private Long totalProduct;
     private Long totalOrder;
     private Map<String, List<ProductDTO>> topProductsByParentCategory;
     private List<RevenueDTO> revenueChart;
