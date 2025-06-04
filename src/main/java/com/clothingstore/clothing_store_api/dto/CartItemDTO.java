@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 
 
 @Data
@@ -18,6 +19,6 @@ public class CartItemDTO {
     private Integer stock;
     private String imageUrl;
     private Double discountPercent;
-    private String price;
+    private BigDecimal price;
     private String slug;
 }

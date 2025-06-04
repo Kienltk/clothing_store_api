@@ -18,9 +18,11 @@ public class CartItemMapper {
         dto.setProductId(cartItem.getProductSize().getProductColor().getProduct().getId());
         dto.setProductName(cartItem.getProductSize().getProductColor().getProduct().getProductName());
         dto.setColor(cartItem.getProductSize().getProductColor().getColor().getColor());
+        dto.setPrice(cartItem.getProductSize().getProductColor().getProduct().getPrice());
+        dto.setSlug(cartItem.getProductSize().getProductColor().getProduct().getSlug());
 
         LocalDateTime now = LocalDateTime.now();
-        Double discountPercent = 0.0;
+        double discountPercent = 0.0;
         if (cartItem.getProductSize().getProductColor().getProduct().getDiscounts() != null) {
             for (Discount discount : cartItem.getProductSize().getProductColor().getProduct().getDiscounts()) {
                 LocalDateTime start = discount.getStartSale() != null
