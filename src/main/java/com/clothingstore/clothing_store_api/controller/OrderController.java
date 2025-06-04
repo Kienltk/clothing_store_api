@@ -2,6 +2,7 @@ package com.clothingstore.clothing_store_api.controller;
 
 import com.clothingstore.clothing_store_api.config.CustomUserDetails;
 import com.clothingstore.clothing_store_api.dto.OrderDTO;
+import com.clothingstore.clothing_store_api.dto.OrderPutDTO;
 import com.clothingstore.clothing_store_api.dto.OrderRequestDTO;
 import com.clothingstore.clothing_store_api.response.ResponseObject;
 import com.clothingstore.clothing_store_api.service.OrderService;
@@ -55,6 +56,25 @@ public class OrderController {
                 HttpStatus.OK.value(),
                 "Orders retrieved successfully",
                 orders
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping
+    public ResponseEntity<ResponseObject<OrderDTO>> updateStatusOrder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody OrderPutDTO orderUpdate
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject<>(401, "User not authenticated", null));
+        }
+        OrderDTO order = orderService.updateStatusOrder(orderUpdate.getId(), orderUpdate.getStatus());
+        ResponseObject<OrderDTO> response = new ResponseObject<>(
+                HttpStatus.OK.value(),
+                "Orders retrieved successfully",
+                order
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

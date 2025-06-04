@@ -60,15 +60,17 @@ public class CartRedisService {
             );
 
             ProductSize productSize = entityFinder.findProductSizeById(productSizeId);
-            Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
-            CartItem cartItem = existingCartItem.orElse(new CartItem());
+//            Optional<CartItem> existingCartItem = cartItemRepository.findByUser_IdAndProductSize_Id(userId, productSizeId);
+//            CartItem cartItem = existingCartItem.orElse(new CartItem());
+//
+//            cartItem.setUser(user);
+//            cartItem.setProductSize(productSize);
+//            cartItem.setQuantity(itemDTO.getQuantity());
 
-            cartItem.setUser(user);
-            cartItem.setProductSize(productSize);
-            cartItem.setQuantity(itemDTO.getQuantity());
+//            CartItem savedCartItem = cartItemRepository.save(cartItem);
+            CartItem cartItem = cartItemHandler.addOrUpdateCartItem(user, productSize, itemDTO.getQuantity());
 
-            CartItem savedCartItem = cartItemRepository.save(cartItem);
-            result.add(cartItemMapper.toDTO(savedCartItem));
+            result.add(cartItemMapper.toDTO(cartItem));
         }
 
         return result;

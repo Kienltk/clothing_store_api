@@ -80,6 +80,7 @@ public class OrderService {
         }
 
         order.setTotal(orderTotal);
+        order.setStatus("Pending");
         orderRepository.save(order);
 
         return toOrderDTO(order);
@@ -94,12 +95,24 @@ public class OrderService {
         return orderDTOs;
     }
 
+    public OrderDTO updateStatusOrder(Long orderId, String status) {
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (orderOpt.isEmpty()) {
+            throw new RuntimeException("Order not found");
+        }
+        Order order = orderOpt.get();
+        order.setStatus(status);
+        orderRepository.save(order);
+        return toOrderDTO(order);
+    }
+
     private OrderDTO toOrderDTO(Order order) {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setId(order.getId());
         orderDTO.setUserId(order.getUser().getId());
         orderDTO.setPaymentTime(order.getPaymentTime());
         orderDTO.setTotal(order.getTotal());
+        orderDTO.setStatus(order.getStatus());
 
         List<OrderItemDTO> itemDTOs = new ArrayList<>();
         for (OrderItem item : order.getOrderItems()) {

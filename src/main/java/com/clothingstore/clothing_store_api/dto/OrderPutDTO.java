@@ -11,12 +11,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderDTO {
+public class OrderPutDTO {
     private Long id;
-    private Long userId;
-    private Date paymentTime;
-    private BigDecimal total;
-    private String status;
-    private List<OrderItemDTO> orderItems;
-}
-
+    private String status;}
