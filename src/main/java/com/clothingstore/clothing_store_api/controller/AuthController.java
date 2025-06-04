@@ -8,13 +8,13 @@ import com.clothingstore.clothing_store_api.dto.RefreshResponseDTO;
 import com.clothingstore.clothing_store_api.dto.RegisterDTO;
 import com.clothingstore.clothing_store_api.entity.User;
 import com.clothingstore.clothing_store_api.response.ResponseObject;
-import com.clothingstore.clothing_store_api.service.SendMailService;
 import com.clothingstore.clothing_store_api.service.TokenService;
 import com.clothingstore.clothing_store_api.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-public class UserController {
+public class AuthController {
 
     @Autowired
     private UserService userService;
@@ -54,7 +54,12 @@ public class UserController {
         String newAccessToken = userService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(new ResponseObject<>(200, "Token refreshed successfully", new RefreshResponseDTO(newAccessToken)));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/users")
+    public ResponseEntity<ResponseObject<List<InfoUserDTO>>> getAllUsers() {
+        List<InfoUserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(new ResponseObject<>(200, "Get all users successfully", users));
+    }
     @PostMapping("/logout")
     public ResponseEntity<ResponseObject<String>> logout(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
@@ -99,7 +104,7 @@ public class UserController {
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/user")
     public ResponseEntity<ResponseObject<String>> getInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody InfoUserDTO request) {

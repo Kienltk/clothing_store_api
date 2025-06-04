@@ -1,11 +1,13 @@
 package com.clothingstore.clothing_store_api.controller;
 
 import com.clothingstore.clothing_store_api.config.CustomUserDetails;
+import com.clothingstore.clothing_store_api.dto.CreateProductDTO;
 import com.clothingstore.clothing_store_api.dto.ProductDTO;
 import com.clothingstore.clothing_store_api.dto.ProductDetailDTO;
 import com.clothingstore.clothing_store_api.dto.SearchProductDTO;
 import com.clothingstore.clothing_store_api.response.ResponseObject;
 import com.clothingstore.clothing_store_api.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,80 +24,51 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
+
     @GetMapping
-    public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getAllProducts(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId;
-        if (userDetails == null) {
-            userId = null;
-        } else {
-            userId = userDetails.getUser().getId();
-        }
+    public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getAllProducts(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
         Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, null);
-        ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
-                HttpStatus.OK.value(),
-                "Okkk",
-                data
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseObject<>(HttpStatus.OK.value(), "Success", data), HttpStatus.OK);
     }
 
     @GetMapping("/category/{slug}")
     public ResponseEntity<ResponseObject<Map<String, List<ProductDTO>>>> getProductsBySubCategory(
-            @PathVariable String slug,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId;
-        if (userDetails == null) {
-            userId = null;
-        } else {
-            userId = userDetails.getUser().getId();
-        }
+            @PathVariable String slug, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
         Map<String, List<ProductDTO>> data = productService.getProductsByCategory(userId, slug);
-        ResponseObject<Map<String, List<ProductDTO>>> response = new ResponseObject<>(
-                HttpStatus.OK.value(),
-                "Okkk",
-                data
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseObject<>(HttpStatus.OK.value(), "Success", data), HttpStatus.OK);
     }
 
     @GetMapping("/search")
     public ResponseEntity<ResponseObject<Map<String, Object>>> searchProducts(
-            @RequestParam String productName,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId;
-        if (userDetails == null) {
-            userId = null;
-        } else {
-            userId = userDetails.getUser().getId();
-        }
+            @RequestParam String productName, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
         SearchProductDTO result = productService.searchProducts(productName, userId);
-        ResponseObject<Map<String, Object>> response = new ResponseObject<>(
-                HttpStatus.OK.value(),
-                result.getMessage(),
-                result.getData()
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseObject<>(HttpStatus.OK.value(), result.getMessage(), result.getData()), HttpStatus.OK);
     }
-
+    @PostMapping
+    public ResponseEntity<ResponseObject<ProductDTO>> addProduct(
+           @Valid @RequestBody CreateProductDTO createProductDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
+        ProductDTO productDTO = productService.addNewProduct(createProductDTO, userId);
+        return new ResponseEntity<>(
+                new ResponseObject<>(HttpStatus.CREATED.value(), "Product created successfully", productDTO),
+                HttpStatus.CREATED
+        );
+    }
     @GetMapping("/detail/{slug}")
     public ResponseEntity<ResponseObject<ProductDetailDTO>> getProductDetails(
-            @PathVariable String slug,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId;
-        if (userDetails == null) {
-            userId = null;
-        } else {
-            userId = userDetails.getUser().getId();
-        }
+            @PathVariable String slug, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
         ProductDetailDTO result = productService.getProductDetails(slug, userId);
         if (result == null) {
             return new ResponseEntity<>(new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Product not found", null), HttpStatus.NOT_FOUND);
         }
-        ResponseObject<ProductDetailDTO> response = new ResponseObject<>(
-                HttpStatus.OK.value(),
-                "Product details retrieved",
-                result
-        );
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseObject<>(HttpStatus.OK.value(), "Product details retrieved", result), HttpStatus.OK);
     }
+
+
 }

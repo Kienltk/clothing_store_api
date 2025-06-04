@@ -5,7 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -70,6 +70,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred", null),
                 HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ResponseObject<String>> handleAccessDeniedException(AccessDeniedException ex) {
+        return new ResponseEntity<>(
+                new ResponseObject<>(403, "You do not have permission to perform this action", null),
+                HttpStatus.FORBIDDEN
+        );
     }
 }
 

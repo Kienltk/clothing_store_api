@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface ProductSizeRepository extends JpaRepository<ProductSize,Long> {
     Optional<ProductSize> findByProductColorProductIdAndProductColorColorColorAndSizeSize(
             Long productId, String color, String size);
+
+    void deleteByProductColorId(Long id);
 }

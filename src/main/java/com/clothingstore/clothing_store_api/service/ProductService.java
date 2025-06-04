@@ -2,10 +2,8 @@ package com.clothingstore.clothing_store_api.service;
 
 import com.clothingstore.clothing_store_api.dto.*;
 import com.clothingstore.clothing_store_api.entity.*;
-import com.clothingstore.clothing_store_api.repository.CategoryRepository;
-import com.clothingstore.clothing_store_api.repository.FavoriteRepository;
-import com.clothingstore.clothing_store_api.repository.ProductRepository;
-import com.clothingstore.clothing_store_api.repository.ProductSizeRepository;
+import com.clothingstore.clothing_store_api.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,16 +18,24 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
     private final ProductSizeRepository productSizeRepository;
+    private final ColorRepository colorRepository;
+    private final SizeRepository sizeRepository;
+    private final ProductColorRepository productColorRepository;
+    private final ProductImageRepository productImageRepository;
 
-    public ProductService(CategoryRepository categoryRepository, ProductRepository productRepository, FavoriteRepository favoriteRepository, ProductSizeRepository productSizeRepository) {
+    public ProductService(ProductImageRepository productImageRepository, ProductColorRepository productColorRepository, SizeRepository sizeRepository, ColorRepository colorRepository, CategoryRepository categoryRepository, ProductRepository productRepository, FavoriteRepository favoriteRepository, ProductSizeRepository productSizeRepository) {
+        this.productColorRepository = productColorRepository;
+        this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
+        this.sizeRepository = sizeRepository;
+        this.colorRepository = colorRepository;
         this.productRepository = productRepository;
         this.favoriteRepository = favoriteRepository;
         this.productSizeRepository = productSizeRepository;
     }
 
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
-        Long categoryId = slug == null ? null : categoryRepository.findBySlug(slug).getId();
+        Long categoryId = slug == null ? null : categoryRepository.findBySlug(slug).get().getId();
         List<Category> categories = categoryId == null ? categoryRepository.findByParentId(null) : categoryRepository.findByParentId(categoryId);
         Map<String, List<ProductDTO>> categoryProducts = new HashMap<>();
         for (Category category : categories) {
@@ -86,7 +92,7 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-     ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
+    ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
         Date currentDate = new Date();
         BigDecimal discount = product.getDiscounts().stream()
                 .filter(d -> d.getStartSale().before(currentDate) && d.getEndSale().after(currentDate))
@@ -111,6 +117,51 @@ public class ProductService {
         String slug = product.getSlug();
 
         return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite, slug);
+    }
+
+    @Transactional
+    public ProductDTO addNewProduct(CreateProductDTO dto, Long userId) {
+        Product product = new Product();
+        product.setProductName(dto.getProductName());
+        product.setPrice(dto.getPrice());
+        product.setStatus(dto.getStatus());
+        String finalSlug = dto.getSlug() != null && !dto.getSlug().isEmpty()
+                ? dto.getSlug()
+                : generateSlug(dto.getProductName());
+        product.setSlug(finalSlug);
+        product.setCreated(new Date());
+
+        List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
+        product.setCategories(categories);
+        product = productRepository.save(product);
+
+        for (StockDetailDTO variant : dto.getVariants()) {
+            Color color = colorRepository.findByColor(variant.getColor())
+                    .orElseThrow(() -> new RuntimeException("Color not found: " + variant.getColor()));
+
+            ProductColor productColor = new ProductColor();
+            productColor.setProduct(product);
+            productColor.setColor(color);
+            productColor = productColorRepository.save(productColor);
+
+            ProductImage image = new ProductImage();
+            image.setImageUrl(variant.getImg());
+            image.setProductColor(productColor);
+            image.setIsMainImage(true);
+            productImageRepository.save(image);
+
+            for (SizeStockDTO sizeDTO : variant.getSizes()) {
+                Size size = sizeRepository.findBySize(sizeDTO.getSize())
+                        .orElseThrow(() -> new RuntimeException("Size not found: " + sizeDTO.getSize()));
+
+                ProductSize productSize = new ProductSize();
+                productSize.setProductColor(productColor);
+                productSize.setSize(size);
+                productSize.setStock(sizeDTO.getStock());
+                productSizeRepository.save(productSize);
+            }
+        }
+        return mapProductToDetails(product, userId, Collections.emptyList());
     }
 
     private List<StockDetailDTO> getStockDetails(Product product) {
@@ -149,5 +200,14 @@ public class ProductService {
         }
 
         return productSizeOpt.get().getId();
+    }
+
+    // Phương thức generateSlug tương tự như trong CategoryService
+    private String generateSlug(String productName) {
+        if (productName == null) return "";
+        return productName.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-");
     }
 }
