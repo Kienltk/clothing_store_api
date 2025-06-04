@@ -46,6 +46,9 @@ public class CartRedisService {
 
     @CacheEvict(value = "cartItems", key = "#userId")
     public List<CartItemDTO> addOrUpdateCartItem(Long userId, List<CartItemDTO> addCartItemDTO) {
+        List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
+        cartItemRepository.deleteAll(cartItems);
+
         List<CartItemDTO> result = new ArrayList<>();
         User user = entityFinder.findUserById(userId);
 
