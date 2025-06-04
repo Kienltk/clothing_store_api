@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("api/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DashboardDTO> getDashboardData() {
         DashboardDTO dashboardData = adminService.getDashboardData();
         return ResponseEntity.ok(dashboardData);

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,8 +31,6 @@ public class AdminService {
         dashboard.setTotalIncome(orderRepository.findAll().stream()
                 .map(order -> order.getTotal() != null ? order.getTotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
-
-        dashboard.setTotalProduct(productRepository.count());
 
         dashboard.setTotalOrder(orderRepository.count());
 
@@ -75,13 +74,18 @@ public class AdminService {
 
     private List<RevenueDTO> getRevenueChart() {
         List<Object[]> revenueData = orderRepository.findRevenueByDate();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("dd/MM/yyyy");
 
         return revenueData.stream().map(obj -> {
-            Date date = (Date) obj[0];
+            String inputDate = (String) obj[0];
             BigDecimal total = (BigDecimal) obj[1];
-            return new RevenueDTO(sdf.format(date), total);
+            try {
+                Date date = inputFormat.parse(inputDate);
+                return new RevenueDTO(outputFormat.format(date), total);
+            } catch (ParseException e) {
+                throw new RuntimeException("Failed to parse date: " + inputDate, e);
+            }
         }).collect(Collectors.toList());
     }
 }
