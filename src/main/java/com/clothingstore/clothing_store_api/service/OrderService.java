@@ -87,7 +87,7 @@ public class OrderService {
     }
 
     public List<OrderDTO> getOrders(Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
+        List<Order> orders = userId == null ? orderRepository.findAll() : orderRepository.findByUserId(userId);
         List<OrderDTO> orderDTOs = new ArrayList<>();
         for (Order order : orders) {
             orderDTOs.add(toOrderDTO(order));

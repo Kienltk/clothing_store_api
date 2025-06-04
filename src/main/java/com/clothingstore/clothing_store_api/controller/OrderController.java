@@ -50,7 +50,8 @@ public class OrderController {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseObject<>(401, "User not authenticated", null));
         }
-        Long userId = userDetails.getUser().getId();
+
+        Long userId = userDetails.getUser().getRole().equals("ADMIN") ? null : userDetails.getUser().getId();
         List<OrderDTO> orders = orderService.getOrders(userId);
         ResponseObject<List<OrderDTO>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
