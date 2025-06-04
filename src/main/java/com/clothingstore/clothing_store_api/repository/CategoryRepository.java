@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByParentId(Long parentId);
-    Optional<Category> findBySlug(String slug);
+    Category findBySlug(String slug);
+    List<Category> findByParentIsNull();
 }
