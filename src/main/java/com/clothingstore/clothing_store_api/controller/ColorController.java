@@ -15,12 +15,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/colors")
+@PreAuthorize("hasRole('ADMIN')")
 public class ColorController {
     @Autowired
     private ColorService colorService;
 
-
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ResponseObject<ColorDTO>> createColor(
            @Valid @RequestBody ColorDTO colorDTO) {

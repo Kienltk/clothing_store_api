@@ -15,11 +15,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/categories")
+@PreAuthorize("hasRole('ADMIN')")
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ResponseObject<CategoryDTO>> createCategory(
           @Valid  @RequestBody CategoryDTO categoryDTO) {
