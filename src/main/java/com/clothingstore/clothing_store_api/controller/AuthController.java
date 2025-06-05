@@ -54,12 +54,14 @@ public class AuthController {
         String newAccessToken = userService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(new ResponseObject<>(200, "Token refreshed successfully", new RefreshResponseDTO(newAccessToken)));
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
     public ResponseEntity<ResponseObject<List<InfoUserDTO>>> getAllUsers() {
         List<InfoUserDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(new ResponseObject<>(200, "Get all users successfully", users));
     }
+
     @PostMapping("/logout")
     public ResponseEntity<ResponseObject<String>> logout(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
@@ -88,15 +90,22 @@ public class AuthController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUser(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody(required = false) Long userIdRq
+    ) {
+        InfoUserDTO data;
         if (userDetails == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseObject<>(401, "User not authenticated", null));
+        } else if (userDetails.getUser().getRole().equals("ADMIN") && userIdRq != null) {
+            data = userService.getInfoUser(userIdRq);
+        } else {
+            Long userId = userDetails.getUser().getId();
+            data = userService.getInfoUser(userId);
         }
-        Long userId = userDetails.getUser().getId();
 
-        InfoUserDTO data = userService.getInfoUser(userId);
         ResponseObject<InfoUserDTO> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
                 "Get Info User success",
@@ -104,9 +113,10 @@ public class AuthController {
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/user")
-    public ResponseEntity<ResponseObject<String>> getInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<ResponseObject<String>> editInfoUser(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestBody InfoUserDTO request) {
         if (userDetails == null) {
             return ResponseEntity
