@@ -32,7 +32,7 @@ public class Product {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @Column(name = "img", nullable = false)
+    @Column(name = "img", nullable = true)
     private String img;
 
     @ManyToMany(mappedBy = "favoriteProducts")
