@@ -1,6 +1,7 @@
 package com.clothingstore.clothing_store_api.controller;
 
 import com.clothingstore.clothing_store_api.dto.DiscountDTO;
+import com.clothingstore.clothing_store_api.dto.DiscountResponseDTO;
 import com.clothingstore.clothing_store_api.entity.Discount;
 import com.clothingstore.clothing_store_api.response.ResponseObject;
 import com.clothingstore.clothing_store_api.service.DiscountService;
@@ -21,11 +22,12 @@ public class DiscountController {
     private DiscountService discountService;
 
     @PostMapping
-    public ResponseEntity<ResponseObject<Discount>> create(
-           @Valid @RequestBody DiscountDTO dto) {
-        Discount discount = discountService.createDiscount(dto);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseObject<DiscountResponseDTO>> createDiscount(
+            @Valid @RequestBody DiscountDTO discountDTO) {
+        DiscountResponseDTO createdDiscount = discountService.addDiscount(discountDTO);
         return new ResponseEntity<>(
-                new ResponseObject<>(HttpStatus.CREATED.value(), "Discount created successfully", discount),
+                new ResponseObject<>(HttpStatus.CREATED.value(), "Discount created successfully", createdDiscount),
                 HttpStatus.CREATED
         );
     }
@@ -33,7 +35,7 @@ public class DiscountController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<Discount>> update(
             @PathVariable Long id,
-         @Valid @RequestBody DiscountDTO dto) {
+            @Valid @RequestBody DiscountDTO dto) {
         Discount discount = discountService.updateDiscount(id, dto);
         if (discount == null) {
             return new ResponseEntity<>(

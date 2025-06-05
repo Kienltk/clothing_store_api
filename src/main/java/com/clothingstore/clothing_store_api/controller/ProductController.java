@@ -56,26 +56,26 @@ public class ProductController {
            @Valid @RequestBody CreateProductDTO createProductDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-        ProductDTO productDTO = productService.addNewProduct(createProductDTO, userId);
+        productService.addNewProduct(createProductDTO, userId);
         return new ResponseEntity<>(
-                new ResponseObject<>(HttpStatus.CREATED.value(), "Product created successfully", productDTO),
+                new ResponseObject<>(HttpStatus.CREATED.value(), "Product created successfully", null),
                 HttpStatus.CREATED
         );
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @PutMapping("/{id}")
-//    public ResponseEntity<ResponseObject<ProductDTO>> updateProduct(
-//            @PathVariable Long id,
-//            @Valid @RequestBody CreateProductDTO createProductDTO,
-//            @AuthenticationPrincipal CustomUserDetails userDetails) {
-//        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-//        ProductDTO updatedProduct = productService.editProduct(id, createProductDTO, userId);
-//        return new ResponseEntity<>(
-//                new ResponseObject<>(HttpStatus.OK.value(), "Product updated successfully", updatedProduct),
-//                HttpStatus.OK
-//        );
-//    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseObject<ProductDTO>> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateProductDTO createProductDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
+        productService.editProduct(id, createProductDTO, userId);
+        return new ResponseEntity<>(
+                new ResponseObject<>(HttpStatus.OK.value(), "Product updated successfully", null),
+                HttpStatus.OK
+        );
+    }
 
     @GetMapping("/detail/{slug}")
     public ResponseEntity<ResponseObject<ProductDetailDTO>> getProductDetails(

@@ -6,6 +6,9 @@ import com.clothingstore.clothing_store_api.repository.*;
 import com.clothingstore.clothing_store_api.util.SlugUtil;
 import com.clothingstore.clothing_store_api.util.CategoryUtil;
 import jakarta.transaction.Transactional;
+import lombok.extern.flogger.Flogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,6 +18,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProductService {
     private static final int MAX_RELATED_PRODUCTS = 16;
+    private static final Logger log = LogManager.getLogger(ProductService.class);
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
@@ -130,17 +134,21 @@ public class ProductService {
 
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         product.setCategories(categories);
-
         product = productRepository.save(product);
 
-        List<ProductColor> newColors = handleVariants(dto.getVariants(), product);
-        product.setProductColors(newColors);
+        handleVariants(dto.getVariants(), product);
 
-        product = productRepository.findById(product.getId())
-                .orElseThrow(() -> new RuntimeException("Product not found after save"));
+        Product finalProduct = product;
+        Product newProduct = productRepository.findById(finalProduct.getId())
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + finalProduct.getId()));
+        System.out.println("Loaded product colors size: " + newProduct.getProductColors().size());
 
-        return mapProductToDetails(product, userId, Collections.emptyList());
+        ProductDTO result = mapProductToDetails(newProduct, userId, Collections.emptyList());
+        System.out.println("Stock details in response: " + result.getStockDetails());
+
+        return result;
     }
+
 
     @Transactional
     public ProductDTO editProduct(Long productId, CreateProductDTO dto, Long userId) {
@@ -152,7 +160,6 @@ public class ProductService {
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         product.setCategories(categories);
 
-        // Xóa các productColor cũ và dữ liệu liên quan
         List<ProductColor> oldColors = productColorRepository.findByProductId(productId);
         for (ProductColor pc : oldColors) {
             productSizeRepository.deleteAll(pc.getProductSizes());
@@ -160,9 +167,13 @@ public class ProductService {
         }
         productColorRepository.deleteAll(oldColors);
 
-        product = productRepository.save(product);
+        product = productRepository.saveAndFlush(product);
 
         handleVariants(dto.getVariants(), product);
+
+        Product finalProduct = product;
+        product = productRepository.findById(product.getId())
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + finalProduct.getId()));
 
         return mapProductToDetails(product, userId, Collections.emptyList());
     }
@@ -179,42 +190,46 @@ public class ProductService {
         product.setSlug(finalSlug);
     }
 
-    private List<ProductColor> handleVariants(List<StockDetailDTO> variants, Product product) {
-        List<ProductColor> newColors = new ArrayList<>();
-        if (variants == null || variants.isEmpty()) return newColors;
+    private void handleVariants(List<StockDetailDTO> variants, Product product) {
+        if (variants == null || variants.isEmpty()) {
+            System.out.println("No variants provided");
+            return;
+        }
 
         for (StockDetailDTO variant : variants) {
+            System.out.println("Processing variant: " + variant.getColor());
             Color color = colorRepository.findByColor(variant.getColor())
                     .orElseThrow(() -> new RuntimeException("Color not found: " + variant.getColor()));
 
             ProductColor productColor = new ProductColor();
             productColor.setProduct(product);
             productColor.setColor(color);
-            productColor = productColorRepository.save(productColor);
+            productColor = productColorRepository.saveAndFlush(productColor);
+            System.out.println("Saved ProductColor ID: " + productColor.getId());
 
             if (variant.getImg() != null && !variant.getImg().isEmpty()) {
                 ProductImage image = new ProductImage();
                 image.setImageUrl(variant.getImg());
                 image.setProductColor(productColor);
-                productImageRepository.save(image);
+                productImageRepository.saveAndFlush(image);
+                System.out.println("Saved ProductImage: " + variant.getImg());
             }
 
-            if (variant.getSizes() != null) {
+            if (variant.getSizes() != null && !variant.getSizes().isEmpty()) {
                 for (SizeStockDTO sizeDTO : variant.getSizes()) {
                     Size size = sizeRepository.findBySize(sizeDTO.getSize())
                             .orElseThrow(() -> new RuntimeException("Size not found: " + sizeDTO.getSize()));
-
                     ProductSize productSize = new ProductSize();
                     productSize.setProductColor(productColor);
                     productSize.setSize(size);
                     productSize.setStock(sizeDTO.getStock());
-                    productSizeRepository.save(productSize);
+                    productSizeRepository.saveAndFlush(productSize);
+                    System.out.println("Saved ProductSize: " + sizeDTO.getSize() + ", stock: " + sizeDTO.getStock());
                 }
+            } else {
+                System.out.println("No sizes provided for variant: " + variant.getColor());
             }
-
-            newColors.add(productColor);
         }
-        return newColors;
     }
 
     private List<StockDetailDTO> getStockDetails(Product product) {

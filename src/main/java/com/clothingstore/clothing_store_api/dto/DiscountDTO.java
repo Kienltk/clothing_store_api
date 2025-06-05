@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class DiscountDTO {
@@ -16,11 +17,11 @@ public class DiscountDTO {
     private BigDecimal discountPercent;
 
     @NotNull(message = "Start date must not be null")
-    private LocalDateTime startSale;
+    private OffsetDateTime startSale;
 
     @NotNull(message = "End date must not be null")
     @Future(message = "End date must be in the future")
-    private LocalDateTime endSale;
+    private OffsetDateTime  endSale;
 
     @NotNull(message = "Product ID must not be null")
     private Long productId;

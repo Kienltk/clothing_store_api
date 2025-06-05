@@ -1,6 +1,7 @@
 package com.clothingstore.clothing_store_api.repository;
 
 import com.clothingstore.clothing_store_api.entity.Product;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
