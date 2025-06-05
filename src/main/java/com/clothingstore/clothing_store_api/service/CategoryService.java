@@ -89,7 +89,13 @@ public class CategoryService {
         categoryRepository.deleteById(id);
         return true;
     }
-
+    public List<CategoryDTO> getCategoriesByProductId(Long productId) {
+        List<Category> categories = categoryRepository.findCategoriesByProductId(productId)
+                .orElseThrow(() -> new ValidationException("No categories found for product id: " + productId));
+        return categories.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
     private CategoryDTO mapToDTO(Category category) {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
