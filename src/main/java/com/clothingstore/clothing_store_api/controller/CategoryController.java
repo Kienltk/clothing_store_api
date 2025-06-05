@@ -62,7 +62,6 @@ public class CategoryController {
         );
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<CategoryDTO>> updateCategory(
             @PathVariable Long id,
@@ -79,8 +78,7 @@ public class CategoryController {
                 HttpStatus.OK
         );
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<String>> deleteCategory(
             @PathVariable Long id) {
