@@ -3,6 +3,8 @@ package com.clothingstore.clothing_store_api.service;
 import com.clothingstore.clothing_store_api.dto.*;
 import com.clothingstore.clothing_store_api.entity.*;
 import com.clothingstore.clothing_store_api.repository.*;
+import com.clothingstore.clothing_store_api.util.SlugUtil;
+import com.clothingstore.clothing_store_api.util.CategoryUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -122,20 +124,56 @@ public class ProductService {
     @Transactional
     public ProductDTO addNewProduct(CreateProductDTO dto, Long userId) {
         Product product = new Product();
-        product.setProductName(dto.getProductName());
-        product.setPrice(dto.getPrice());
-        product.setStatus(dto.getStatus());
-        String finalSlug = dto.getSlug() != null && !dto.getSlug().isEmpty()
-                ? dto.getSlug()
-                : generateSlug(dto.getProductName());
-        product.setSlug(finalSlug);
+        setAttribute(dto, product);
         product.setCreated(new Date());
 
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         product.setCategories(categories);
         product = productRepository.save(product);
 
-        for (StockDetailDTO variant : dto.getVariants()) {
+        handleVariants(dto.getVariants(), product);
+
+        return mapProductToDetails(product, userId, Collections.emptyList());
+    }
+
+    @Transactional
+    public ProductDTO editProduct(Long productId, CreateProductDTO dto, Long userId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+
+        setAttribute(dto, product);
+
+        List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
+        product.setCategories(categories);
+
+        // Xóa các productColor cũ và dữ liệu liên quan
+        List<ProductColor> oldColors = productColorRepository.findByProductId(productId);
+        for (ProductColor pc : oldColors) {
+            productSizeRepository.deleteAll(pc.getProductSizes());
+            productImageRepository.deleteAll(pc.getProductImages());
+        }
+        productColorRepository.deleteAll(oldColors);
+
+        product = productRepository.save(product);
+
+        handleVariants(dto.getVariants(), product);
+
+        return mapProductToDetails(product, userId, Collections.emptyList());
+    }
+
+    private void setAttribute(CreateProductDTO dto, Product product) {
+        product.setProductName(dto.getProductName());
+        product.setPrice(dto.getPrice());
+        product.setStatus(dto.getStatus());
+
+        String finalSlug = dto.getSlug() != null && !dto.getSlug().isEmpty()
+                ? dto.getSlug()
+                : SlugUtil.generateSlug(dto.getProductName());
+        product.setSlug(finalSlug);
+    }
+
+    private void handleVariants(List<StockDetailDTO> variants, Product product) {
+        for (StockDetailDTO variant : variants) {
             Color color = colorRepository.findByColor(variant.getColor())
                     .orElseThrow(() -> new RuntimeException("Color not found: " + variant.getColor()));
 
@@ -161,7 +199,6 @@ public class ProductService {
                 productSizeRepository.save(productSize);
             }
         }
-        return mapProductToDetails(product, userId, Collections.emptyList());
     }
 
     private List<StockDetailDTO> getStockDetails(Product product) {
@@ -184,10 +221,7 @@ public class ProductService {
 
     private Category getParentCategory(Product product) {
         Category category = product.getCategories().get(0);
-        while (category.getParent() != null) {
-            category = category.getParent();
-        }
-        return category;
+        return CategoryUtil.getParentCategoryFromCategory(category);
     }
 
     Long mapToProductSizeId(Long productId, String color, String sizeName) {
@@ -200,14 +234,5 @@ public class ProductService {
         }
 
         return productSizeOpt.get().getId();
-    }
-
-    // Phương thức generateSlug tương tự như trong CategoryService
-    private String generateSlug(String productName) {
-        if (productName == null) return "";
-        return productName.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .trim()
-                .replaceAll("\\s+", "-");
     }
 }

@@ -3,6 +3,8 @@ package com.clothingstore.clothing_store_api.service;
 import com.clothingstore.clothing_store_api.dto.CategoryDTO;
 import com.clothingstore.clothing_store_api.entity.Category;
 import com.clothingstore.clothing_store_api.repository.CategoryRepository;
+import com.clothingstore.clothing_store_api.util.SlugUtil;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,12 +17,19 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Transactional
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         Category category = new Category();
         category.setCategoryName(categoryDTO.getCategoryName());
-        category.setSlug(generateSlug(categoryDTO.getCategoryName()));
 
-        // xử lý parent nếu có
+        String finalSlug = SlugUtil.generateUniqueSlugForCategory(
+                SlugUtil.generateSlug(categoryDTO.getCategoryName()),
+                categoryDTO.getParentId(),
+                categoryRepository
+        );
+        category.setSlug(finalSlug);
+
+        // Xử lý parent nếu có
         if (categoryDTO.getParentId() != null) {
             Category parent = categoryRepository.findById(categoryDTO.getParentId())
                     .orElseThrow(() -> new RuntimeException("Parent category not found"));
@@ -42,11 +51,16 @@ public class CategoryService {
                 .orElseThrow(() -> new ValidationException("Category not found"));
         return mapToDTO(category);
     }
-
-    public CategoryDTO getCategoryBySlug(String slug) {
-        Category category = categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new ValidationException("Category not found"));
-        return mapToDTO(category);
+    public List<CategoryDTO> getCategoriesByParentId(Long parentId) {
+        List<Category> categories;
+        if (parentId != null) {
+            categories = categoryRepository.findByParentId(parentId);
+        } else {
+            categories = categoryRepository.findByParentId(null);
+        }
+        return categories.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {

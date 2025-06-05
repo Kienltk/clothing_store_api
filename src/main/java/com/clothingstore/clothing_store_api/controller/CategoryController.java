@@ -52,6 +52,16 @@ public class CategoryController {
         ));
     }
 
+    @GetMapping("/parent/{parentId}")
+    public ResponseEntity<ResponseObject<List<CategoryDTO>>> getCategoriesByParentId(
+            @PathVariable Long parentId) {
+        List<CategoryDTO> categories = categoryService.getCategoriesByParentId(parentId);
+        return new ResponseEntity<>(
+                new ResponseObject<>(HttpStatus.OK.value(), "Categories retrieved successfully", categories),
+                HttpStatus.OK
+        );
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<CategoryDTO>> updateCategory(
