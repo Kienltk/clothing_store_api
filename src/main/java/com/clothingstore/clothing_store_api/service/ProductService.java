@@ -196,7 +196,6 @@ public class ProductService {
                 ProductImage image = new ProductImage();
                 image.setImageUrl(variant.getImg());
                 image.setProductColor(productColor);
-                image.setIsMainImage(true);
                 productImageRepository.save(image);
             }
 
@@ -226,7 +225,6 @@ public class ProductService {
                 .map(pc -> new StockDetailDTO(
                         pc.getColor() != null ? pc.getColor().getColor() : "",
                         pc.getProductImages() != null ? pc.getProductImages().stream()
-                                .filter(img -> Boolean.TRUE.equals(img.getIsMainImage()))
                                 .map(ProductImage::getImageUrl)
                                 .findFirst()
                                 .orElse("") : "",

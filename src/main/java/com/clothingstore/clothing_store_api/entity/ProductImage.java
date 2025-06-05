@@ -17,7 +17,4 @@ public class ProductImage {
 
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
-
-    @Column(name = "is_main_image")
-    private Boolean isMainImage;
 }
