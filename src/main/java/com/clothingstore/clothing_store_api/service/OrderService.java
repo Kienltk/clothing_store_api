@@ -102,6 +102,13 @@ public class OrderService {
         }
         Order order = orderOpt.get();
         order.setStatus(status);
+        if (status.equalsIgnoreCase("Cancel")) {
+            for (OrderItem item : order.getOrderItems()) {
+                ProductSize productSize = item.getProductSize();
+                productSize.setStock(productSize.getStock() + item.getQuantity());
+                productSizeRepository.save(productSize);
+            }
+        }
         orderRepository.save(order);
         return toOrderDTO(order);
     }

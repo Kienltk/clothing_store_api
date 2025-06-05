@@ -78,7 +78,7 @@ public class CategoryController {
                 HttpStatus.OK
         );
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<String>> deleteCategory(
             @PathVariable Long id) {
