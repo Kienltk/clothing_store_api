@@ -102,18 +102,13 @@ public class ProductService {
 
     ProductDTO mapProductToDetails(Product product, Long userId, List<Favorite> favorites) {
         Date currentDate = new Date();
-        BigDecimal discount = product.getDiscounts().stream()
+        BigDecimal discount = product.getDiscounts() != null ? product.getDiscounts().stream()
                 .filter(d -> d.getStartSale().before(currentDate) && d.getEndSale().after(currentDate))
                 .map(Discount::getDiscountPercent)
                 .findFirst()
-                .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO) : BigDecimal.ZERO;
 
-        String mainImageUrl = product.getProductColors().stream()
-                .flatMap(pc -> pc.getProductImages().stream())
-                .filter(img -> Boolean.TRUE.equals(img.getIsMainImage()))
-                .map(ProductImage::getImageUrl)
-                .findFirst()
-                .orElse("");
+        String mainImageUrl = product.getImg();
 
         Long id = product.getId();
         String productName = product.getProductName();
@@ -135,9 +130,14 @@ public class ProductService {
 
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         product.setCategories(categories);
+
         product = productRepository.save(product);
 
-        handleVariants(dto.getVariants(), product);
+        List<ProductColor> newColors = handleVariants(dto.getVariants(), product);
+        product.setProductColors(newColors);
+
+        product = productRepository.findById(product.getId())
+                .orElseThrow(() -> new RuntimeException("Product not found after save"));
 
         return mapProductToDetails(product, userId, Collections.emptyList());
     }
@@ -169,6 +169,7 @@ public class ProductService {
 
     private void setAttribute(CreateProductDTO dto, Product product) {
         product.setProductName(dto.getProductName());
+        product.setImg(dto.getImgMain());
         product.setPrice(dto.getPrice());
         product.setStatus(dto.getStatus());
 
@@ -178,7 +179,10 @@ public class ProductService {
         product.setSlug(finalSlug);
     }
 
-    private void handleVariants(List<StockDetailDTO> variants, Product product) {
+    private List<ProductColor> handleVariants(List<StockDetailDTO> variants, Product product) {
+        List<ProductColor> newColors = new ArrayList<>();
+        if (variants == null || variants.isEmpty()) return newColors;
+
         for (StockDetailDTO variant : variants) {
             Color color = colorRepository.findByColor(variant.getColor())
                     .orElseThrow(() -> new RuntimeException("Color not found: " + variant.getColor()));
@@ -188,39 +192,50 @@ public class ProductService {
             productColor.setColor(color);
             productColor = productColorRepository.save(productColor);
 
-            ProductImage image = new ProductImage();
-            image.setImageUrl(variant.getImg());
-            image.setProductColor(productColor);
-            image.setIsMainImage(true);
-            productImageRepository.save(image);
-
-            for (SizeStockDTO sizeDTO : variant.getSizes()) {
-                Size size = sizeRepository.findBySize(sizeDTO.getSize())
-                        .orElseThrow(() -> new RuntimeException("Size not found: " + sizeDTO.getSize()));
-
-                ProductSize productSize = new ProductSize();
-                productSize.setProductColor(productColor);
-                productSize.setSize(size);
-                productSize.setStock(sizeDTO.getStock());
-                productSizeRepository.save(productSize);
+            if (variant.getImg() != null && !variant.getImg().isEmpty()) {
+                ProductImage image = new ProductImage();
+                image.setImageUrl(variant.getImg());
+                image.setProductColor(productColor);
+                image.setIsMainImage(true);
+                productImageRepository.save(image);
             }
+
+            if (variant.getSizes() != null) {
+                for (SizeStockDTO sizeDTO : variant.getSizes()) {
+                    Size size = sizeRepository.findBySize(sizeDTO.getSize())
+                            .orElseThrow(() -> new RuntimeException("Size not found: " + sizeDTO.getSize()));
+
+                    ProductSize productSize = new ProductSize();
+                    productSize.setProductColor(productColor);
+                    productSize.setSize(size);
+                    productSize.setStock(sizeDTO.getStock());
+                    productSizeRepository.save(productSize);
+                }
+            }
+
+            newColors.add(productColor);
         }
+        return newColors;
     }
 
     private List<StockDetailDTO> getStockDetails(Product product) {
+        if (product.getProductColors() == null || product.getProductColors().isEmpty()) {
+            return Collections.emptyList();
+        }
         return product.getProductColors().stream()
                 .map(pc -> new StockDetailDTO(
-                        pc.getColor().getColor(),
-                        pc.getProductImages().stream()
+                        pc.getColor() != null ? pc.getColor().getColor() : "",
+                        pc.getProductImages() != null ? pc.getProductImages().stream()
+                                .filter(img -> Boolean.TRUE.equals(img.getIsMainImage()))
                                 .map(ProductImage::getImageUrl)
                                 .findFirst()
-                                .orElse(""),
-                        pc.getProductSizes().stream()
+                                .orElse("") : "",
+                        pc.getProductSizes() != null ? pc.getProductSizes().stream()
                                 .map(ps -> new SizeStockDTO(
-                                        ps.getSize().getSize(),
+                                        ps.getSize() != null ? ps.getSize().getSize() : "",
                                         ps.getStock()
                                 ))
-                                .collect(Collectors.toList())
+                                .collect(Collectors.toList()) : Collections.emptyList()
                 ))
                 .collect(Collectors.toList());
     }

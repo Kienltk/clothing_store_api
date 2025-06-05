@@ -62,18 +62,21 @@ public class ProductController {
                 HttpStatus.CREATED
         );
     }
-    @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<ProductDTO>> updateProduct(
-            @PathVariable Long id,
-            @Valid @RequestBody CreateProductDTO createProductDTO,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-        ProductDTO updatedProduct = productService.editProduct(id, createProductDTO, userId);
-        return new ResponseEntity<>(
-                new ResponseObject<>(HttpStatus.OK.value(), "Product updated successfully", updatedProduct),
-                HttpStatus.OK
-        );
-    }
+
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @PutMapping("/{id}")
+//    public ResponseEntity<ResponseObject<ProductDTO>> updateProduct(
+//            @PathVariable Long id,
+//            @Valid @RequestBody CreateProductDTO createProductDTO,
+//            @AuthenticationPrincipal CustomUserDetails userDetails) {
+//        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
+//        ProductDTO updatedProduct = productService.editProduct(id, createProductDTO, userId);
+//        return new ResponseEntity<>(
+//                new ResponseObject<>(HttpStatus.OK.value(), "Product updated successfully", updatedProduct),
+//                HttpStatus.OK
+//        );
+//    }
+
     @GetMapping("/detail/{slug}")
     public ResponseEntity<ResponseObject<ProductDetailDTO>> getProductDetails(
             @PathVariable String slug, @AuthenticationPrincipal CustomUserDetails userDetails) {

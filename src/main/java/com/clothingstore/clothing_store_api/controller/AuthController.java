@@ -89,10 +89,10 @@ public class AuthController {
         return ResponseEntity.ok(new ResponseObject<>(200, "Password changed successfully", null));
     }
 
-    @GetMapping("/user")
+    @GetMapping("/user/{userIdRq}")
     public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody(required = false) Long userIdRq
+            @PathVariable(required = false) Long userIdRq
     ) {
         InfoUserDTO data;
         if (userDetails == null) {

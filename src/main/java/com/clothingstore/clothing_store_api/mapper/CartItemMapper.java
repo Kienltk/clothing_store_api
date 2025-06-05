@@ -20,6 +20,7 @@ public class CartItemMapper {
         dto.setColor(cartItem.getProductSize().getProductColor().getColor().getColor());
         dto.setPrice(cartItem.getProductSize().getProductColor().getProduct().getPrice());
         dto.setSlug(cartItem.getProductSize().getProductColor().getProduct().getSlug());
+        dto.setImageUrl(cartItem.getProductSize().getProductColor().getProduct().getImg());
 
         LocalDateTime now = LocalDateTime.now();
         double discountPercent = 0.0;
@@ -40,9 +41,9 @@ public class CartItemMapper {
         }
         dto.setDiscountPercent(discountPercent);
 
-        if (!cartItem.getProductSize().getProductColor().getProductImages().isEmpty()) {
-            dto.setImageUrl(cartItem.getProductSize().getProductColor().getProductImages().get(0).getImageUrl());
-        }
+//        if (!cartItem.getProductSize().getProductColor().getProductImages().isEmpty()) {
+//            dto.setImageUrl(cartItem.getProductSize().getProductColor().getProductImages().get(0).getImageUrl());
+//        }
 
         return dto;
     }

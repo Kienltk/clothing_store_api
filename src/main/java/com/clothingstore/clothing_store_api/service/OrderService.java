@@ -102,7 +102,7 @@ public class OrderService {
         }
         Order order = orderOpt.get();
         order.setStatus(status);
-        if (status.equalsIgnoreCase("Cancel")) {
+        if (status.equalsIgnoreCase("Cancel") && !order.getStatus().equalsIgnoreCase("Cancel")) {
             for (OrderItem item : order.getOrderItems()) {
                 ProductSize productSize = item.getProductSize();
                 productSize.setStock(productSize.getStock() + item.getQuantity());
@@ -127,11 +127,7 @@ public class OrderService {
             ProductColor productColor = productSize.getProductColor();
             Product product = productColor.getProduct();
 
-            String mainImageUrl = productColor.getProductImages().stream()
-                    .filter(img -> Boolean.TRUE.equals(img.getIsMainImage()))
-                    .map(ProductImage::getImageUrl)
-                    .findFirst()
-                    .orElse("");
+            String mainImageUrl = product.getImg();
 
             OrderItemDTO itemDTO = new OrderItemDTO();
             itemDTO.setId(item.getId());

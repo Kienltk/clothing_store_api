@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -31,11 +32,14 @@ public class Product {
     @Column(name = "status", nullable = false)
     private String status;
 
+    @Column(name = "img", nullable = false)
+    private String img;
+
     @ManyToMany(mappedBy = "favoriteProducts")
     private List<User> usersWhoFavorited;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductColor> productColors;
+    private List<ProductColor> productColors = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Discount> discounts;
