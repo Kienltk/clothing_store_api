@@ -6,7 +6,6 @@ import com.clothingstore.clothing_store_api.repository.*;
 import com.clothingstore.clothing_store_api.util.SlugUtil;
 import com.clothingstore.clothing_store_api.util.CategoryUtil;
 import jakarta.transaction.Transactional;
-import lombok.extern.flogger.Flogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -127,7 +126,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDTO addNewProduct(CreateProductDTO dto, Long userId) {
+    public void addNewProduct(CreateProductDTO dto, Long userId) {
         Product product = new Product();
         setAttribute(dto, product);
         product.setCreated(new Date());
@@ -146,12 +145,11 @@ public class ProductService {
         ProductDTO result = mapProductToDetails(newProduct, userId, Collections.emptyList());
         System.out.println("Stock details in response: " + result.getStockDetails());
 
-        return result;
     }
 
 
     @Transactional
-    public ProductDTO editProduct(Long productId, CreateProductDTO dto, Long userId) {
+    public void editProduct(Long productId, CreateProductDTO dto, Long userId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
 
@@ -175,7 +173,7 @@ public class ProductService {
         product = productRepository.findById(product.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + finalProduct.getId()));
 
-        return mapProductToDetails(product, userId, Collections.emptyList());
+        mapProductToDetails(product, userId, Collections.emptyList());
     }
 
     private void setAttribute(CreateProductDTO dto, Product product) {

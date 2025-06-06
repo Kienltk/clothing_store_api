@@ -89,22 +89,42 @@ public class AuthController {
         return ResponseEntity.ok(new ResponseObject<>(200, "Password changed successfully", null));
     }
 
-    @GetMapping("/user/{userIdRq}")
+    @GetMapping("/user")
     public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUser(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable(required = false) Long userIdRq
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         InfoUserDTO data;
         if (userDetails == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseObject<>(401, "User not authenticated", null));
-        } else if (userDetails.getUser().getRole().equals("ADMIN") && userIdRq != null) {
-            data = userService.getInfoUser(userIdRq);
-        } else {
-            Long userId = userDetails.getUser().getId();
-            data = userService.getInfoUser(userId);
         }
+
+        Long userId = userDetails.getUser().getId();
+        data = userService.getInfoUser(userId);
+
+        ResponseObject<InfoUserDTO> response = new ResponseObject<>(
+                HttpStatus.OK.value(),
+                "Get Info User success",
+                data
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/user/{userIdRq}")
+    public ResponseEntity<ResponseObject<InfoUserDTO>> getInfoUserById(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long userIdRq
+    ) {
+        InfoUserDTO data;
+        if (userDetails == null || userDetails.getUser().getRole().equals("ADMIN")) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseObject<>(401, "User not authenticated", null));
+        }
+
+        data = userService.getInfoUser(userIdRq);
 
         ResponseObject<InfoUserDTO> response = new ResponseObject<>(
                 HttpStatus.OK.value(),
@@ -128,4 +148,6 @@ public class AuthController {
         userService.editInfoUser(user, request);
         return ResponseEntity.ok(new ResponseObject<>(200, "Info user update successfully", null));
     }
+
+
 }

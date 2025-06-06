@@ -101,14 +101,15 @@ public class OrderService {
             throw new RuntimeException("Order not found");
         }
         Order order = orderOpt.get();
-        order.setStatus(status);
-        if (status.equalsIgnoreCase("Cancel") && !order.getStatus().equalsIgnoreCase("Cancel")) {
+        if (!order.getStatus().equalsIgnoreCase("Cancelled") && status.equalsIgnoreCase("Cancelled")) {
+            order.setStatus(status);
             for (OrderItem item : order.getOrderItems()) {
                 ProductSize productSize = item.getProductSize();
                 productSize.setStock(productSize.getStock() + item.getQuantity());
                 productSizeRepository.save(productSize);
             }
         }
+
         orderRepository.save(order);
         return toOrderDTO(order);
     }
