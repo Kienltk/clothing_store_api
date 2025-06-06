@@ -149,5 +149,11 @@ public class AuthController {
         return ResponseEntity.ok(new ResponseObject<>(200, "Info user update successfully", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<ResponseObject<String>> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new ResponseObject<>(200, "User deleted successfully", null));
+    }
 
 }

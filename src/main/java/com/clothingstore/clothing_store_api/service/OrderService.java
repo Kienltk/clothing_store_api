@@ -115,12 +115,14 @@ public class OrderService {
     }
 
     private OrderDTO toOrderDTO(Order order) {
+        String fullName = order.getUser().getFirstName() + " " + order.getUser().getLastName();
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setId(order.getId());
         orderDTO.setUserId(order.getUser().getId());
         orderDTO.setPaymentTime(order.getPaymentTime());
         orderDTO.setTotal(order.getTotal());
         orderDTO.setStatus(order.getStatus());
+        orderDTO.setName(fullName);
 
         List<OrderItemDTO> itemDTOs = new ArrayList<>();
         for (OrderItem item : order.getOrderItems()) {

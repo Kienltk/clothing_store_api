@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -115,6 +116,7 @@ public class UserService {
                 ))
                 .collect(Collectors.toList());
     }
+
     public void editInfoUser(User user, InfoUserDTO infoUserDTO) {
         user.setFirstName(infoUserDTO.getFirstName());
         user.setLastName(infoUserDTO.getLastName());
@@ -125,4 +127,11 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        userRepository.delete(user);
+    }
+
 }

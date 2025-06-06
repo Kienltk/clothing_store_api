@@ -176,6 +176,24 @@ public class ProductService {
         mapProductToDetails(product, userId, Collections.emptyList());
     }
 
+    @Transactional
+    public void deleteProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+
+        favoriteRepository.deleteByProductId(productId);
+
+        List<ProductColor> productColors = productColorRepository.findByProductId(productId);
+        for (ProductColor pc : productColors) {
+            productSizeRepository.deleteAll(pc.getProductSizes());
+            productImageRepository.deleteAll(pc.getProductImages());
+        }
+        productColorRepository.deleteAll(productColors);
+
+        productRepository.delete(product);
+        log.info("Product with ID {} deleted successfully", productId);
+    }
+
     private void setAttribute(CreateProductDTO dto, Product product) {
         product.setProductName(dto.getProductName());
         product.setImg(dto.getImgMain());
