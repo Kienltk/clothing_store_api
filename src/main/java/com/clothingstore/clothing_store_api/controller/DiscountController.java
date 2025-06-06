@@ -66,9 +66,9 @@ public class DiscountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<Discount>> getById(
+    public ResponseEntity<ResponseObject<DiscountResponseDTO>> getById(
             @PathVariable Long id) {
-        Discount discount = discountService.getDiscountById(id);
+        DiscountResponseDTO discount = discountService.getDiscountById(id);
         if (discount == null) {
             return new ResponseEntity<>(
                     new ResponseObject<>(HttpStatus.NOT_FOUND.value(), "Discount not found", null),
@@ -82,8 +82,8 @@ public class DiscountController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseObject<List<Discount>>> getAll() {
-        List<Discount> discounts = discountService.getAllDiscounts();
+    public ResponseEntity<ResponseObject<List<DiscountResponseDTO>>> getAll() {
+        List<DiscountResponseDTO> discounts = discountService.getAllDiscounts();
         return new ResponseEntity<>(
                 new ResponseObject<>(HttpStatus.OK.value(), "Discounts retrieved successfully", discounts),
                 HttpStatus.OK

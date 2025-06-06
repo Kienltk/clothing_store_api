@@ -7,13 +7,14 @@ import com.clothingstore.clothing_store_api.entity.Product;
 import com.clothingstore.clothing_store_api.repository.DiscountRepository;
 import com.clothingstore.clothing_store_api.repository.ProductRepository;
 import jakarta.transaction.Transactional;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DiscountService {
@@ -31,28 +32,20 @@ public class DiscountService {
         discount.setStartSale(Date.from(dto.getStartSale().toInstant()));
         discount.setEndSale(Date.from(dto.getEndSale().toInstant()));
 
-        Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
+        Product product = productRepository.findById(dto.getProductId()).orElse(null);
         discount.setProduct(product);
 
         discount = discountRepository.save(discount);
 
-        DiscountResponseDTO response = new DiscountResponseDTO();
-        response.setId(discount.getId());
-        response.setDiscountPercent(discount.getDiscountPercent());
-        response.setStartSale(discount.getStartSale().toInstant().atOffset(OffsetDateTime.now().getOffset()));
-        response.setEndSale(discount.getEndSale().toInstant().atOffset(OffsetDateTime.now().getOffset()));
-        response.setProductId(product.getId());
-        response.setProductName(product.getProductName());
-
-        return response;
+        return getDiscountResponseDTO(discount);
     }
 
     @Transactional
     public Discount updateDiscount(Long id, DiscountDTO dto) {
-        Discount discount = discountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Discount not found"));
+        Discount discount = discountRepository.findById(id).orElse(null);
+        if (discount == null) {
+            return null;
+        }
 
         discount.setDiscountPercent(dto.getDiscountPercent());
 
@@ -65,8 +58,7 @@ public class DiscountService {
         }
 
         if (!discount.getProduct().getId().equals(dto.getProductId())) {
-            Product product = productRepository.findById(dto.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            Product product = productRepository.findById(dto.getProductId()).orElse(null);
             discount.setProduct(product);
         }
 
@@ -75,19 +67,35 @@ public class DiscountService {
 
     @Transactional
     public boolean deleteDiscount(Long id) {
-        if (!discountRepository.existsById(id)) {
-            return false;
-        }
         discountRepository.deleteById(id);
         return true;
     }
 
-    public Discount getDiscountById(Long id) {
-        return discountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Discount not found"));
+    public DiscountResponseDTO getDiscountById(Long id) {
+        Discount discount = discountRepository.findById(id).orElse(null);
+        if (discount == null) {
+            return null;
+        }
+
+        return getDiscountResponseDTO(discount);
     }
 
-    public List<Discount> getAllDiscounts() {
-        return discountRepository.findAll();
+    @NotNull
+    private DiscountResponseDTO getDiscountResponseDTO(Discount discount) {
+        DiscountResponseDTO response = new DiscountResponseDTO();
+        response.setId(discount.getId());
+        response.setDiscountPercent(discount.getDiscountPercent());
+        response.setStartSale(discount.getStartSale().toInstant().atOffset(OffsetDateTime.now().getOffset()));
+        response.setEndSale(discount.getEndSale().toInstant().atOffset(OffsetDateTime.now().getOffset()));
+        response.setProductId(discount.getProduct() != null ? discount.getProduct().getId() : null);
+        response.setProductName(discount.getProduct() != null ? discount.getProduct().getProductName() : null);
+
+        return response;
+    }
+
+    public List<DiscountResponseDTO> getAllDiscounts() {
+        return discountRepository.findAll().stream()
+                .map(this::getDiscountResponseDTO)
+                .collect(Collectors.toList());
     }
 }
