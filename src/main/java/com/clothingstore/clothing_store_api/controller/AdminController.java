@@ -8,9 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("api/admin")
@@ -28,5 +30,33 @@ public class AdminController {
                 dashboardData
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<ResponseObject<String>> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
+        ResponseObject<String> response;
+        try {
+            adminService.uploadFiles(files);
+            response = new ResponseObject<>(
+                    HttpStatus.OK.value(),
+                    "Files uploaded successfully",
+                    null
+            );
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            response = new ResponseObject<>(
+                    HttpStatus.BAD_REQUEST.value(),
+                    e.getMessage(),
+                    null
+            );
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            response = new ResponseObject<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed to upload files: " + e.getMessage(),
+                    null
+            );
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

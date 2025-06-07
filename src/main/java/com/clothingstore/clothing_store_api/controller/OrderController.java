@@ -52,6 +52,8 @@ public class OrderController {
         }
 
         Long userId = userDetails.getUser().getRole().equals("ADMIN") ? null : userDetails.getUser().getId();
+        System.out.println("Authenticated userId: " + userId + ", username: " + userDetails.getUsername());
+
         List<OrderDTO> orders = orderService.getOrders(userId);
         ResponseObject<List<OrderDTO>> response = new ResponseObject<>(
                 HttpStatus.OK.value(),

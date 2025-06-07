@@ -9,8 +9,13 @@ import com.clothingstore.clothing_store_api.repository.CategoryRepository;
 import com.clothingstore.clothing_store_api.repository.OrderRepository;
 import com.clothingstore.clothing_store_api.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,9 +26,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdminService {
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductService productService;
+
+    @Value("${file.upload-dir}")
+    private String UPLOAD_DIR;
+    private static final String ALLOWED_EXTENSION = ".webp";
 
     public DashboardDTO getDashboardData() {
         DashboardDTO dashboard = new DashboardDTO();
@@ -42,6 +50,47 @@ public class AdminService {
 
         return dashboard;
     }
+
+    public void uploadFiles(List<MultipartFile> files) throws IOException {
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException("No files provided");
+        }
+
+        File dir = new File(System.getProperty("user.dir"), UPLOAD_DIR);
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new IOException("Failed to create directory: " + UPLOAD_DIR);
+        }
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                throw new IllegalArgumentException("File is empty: " + file.getOriginalFilename());
+            }
+
+            File destFile = getFile(file, dir);
+
+            file.transferTo(destFile);
+        }
+    }
+
+    private static @NotNull File getFile(MultipartFile file, File dir) {
+        if (!Objects.requireNonNull(file.getOriginalFilename()).toLowerCase().endsWith(ALLOWED_EXTENSION)) {
+            throw new IllegalArgumentException("Only .webp files are allowed: " + file.getOriginalFilename());
+        }
+
+        String fileName = file.getOriginalFilename();
+        File destFile = new File(dir, fileName);
+
+        int counter = 1;
+        while (destFile.exists()) {
+            String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+            String extension = fileName.substring(fileName.lastIndexOf('.'));
+            fileName = baseName + "_" + counter + extension;
+            destFile = new File(dir, fileName);
+            counter++;
+        }
+        return destFile;
+    }
+
 
     private Map<String, List<ProductDTO>> getTopProductsByParentCategory() {
         List<Category> parentCategories = categoryRepository.findByParentIsNull();
