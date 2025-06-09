@@ -23,7 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT FUNCTION('DATE_FORMAT', o.paymentTime, '%Y-%m-%d'), SUM(o.total) " +
             "FROM Order o " +
-            "WHERE o.paymentTime IS NOT NULL " +
+            "WHERE o.paymentTime IS NOT NULL AND o.status <> 'Cancelled' " +
             "GROUP BY FUNCTION('DATE_FORMAT', o.paymentTime, '%Y-%m-%d') " +
             "ORDER BY FUNCTION('DATE_FORMAT', o.paymentTime, '%Y-%m-%d')")
     List<Object[]> findRevenueByDate();
