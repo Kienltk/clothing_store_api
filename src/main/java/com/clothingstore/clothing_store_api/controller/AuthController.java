@@ -118,7 +118,7 @@ public class AuthController {
             @PathVariable Long userIdRq
     ) {
         InfoUserDTO data;
-        if (userDetails == null || userDetails.getUser().getRole().equals("ADMIN")) {
+        if (userDetails == null || !userDetails.getUser().getRole().equals("ADMIN")) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseObject<>(401, "User not authenticated", null));
