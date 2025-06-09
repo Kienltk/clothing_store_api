@@ -100,13 +100,18 @@ public class OrderService {
         if (orderOpt.isEmpty()) {
             throw new RuntimeException("Order not found");
         }
+
         Order order = orderOpt.get();
-        if (!order.getStatus().equalsIgnoreCase("Cancelled") && status.equalsIgnoreCase("Cancelled")) {
-            order.setStatus(status);
-            for (OrderItem item : order.getOrderItems()) {
-                ProductSize productSize = item.getProductSize();
-                productSize.setStock(productSize.getStock() + item.getQuantity());
-                productSizeRepository.save(productSize);
+        if (!order.getStatus().equalsIgnoreCase("Cancelled")) {
+            if (status.equalsIgnoreCase("Shipped") || status.equalsIgnoreCase("Confirmed")) {
+                order.setStatus(status);
+            } else if(status.equalsIgnoreCase("Cancelled")){
+                order.setStatus(status);
+                for (OrderItem item : order.getOrderItems()) {
+                    ProductSize productSize = item.getProductSize();
+                    productSize.setStock(productSize.getStock() + item.getQuantity());
+                    productSizeRepository.save(productSize);
+                }
             }
         }
 
