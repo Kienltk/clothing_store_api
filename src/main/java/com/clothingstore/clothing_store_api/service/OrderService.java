@@ -8,6 +8,7 @@ import com.clothingstore.clothing_store_api.entity.*;
 import com.clothingstore.clothing_store_api.repository.OrderRepository;
 import com.clothingstore.clothing_store_api.repository.ProductSizeRepository;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -131,27 +132,33 @@ public class OrderService {
 
         List<OrderItemDTO> itemDTOs = new ArrayList<>();
         for (OrderItem item : order.getOrderItems()) {
-            ProductSize productSize = item.getProductSize();
-            ProductColor productColor = productSize.getProductColor();
-            Product product = productColor.getProduct();
-
-            String mainImageUrl = product.getImg();
-
-            OrderItemDTO itemDTO = new OrderItemDTO();
-            itemDTO.setId(item.getId());
-            itemDTO.setProductName(product.getProductName());
-            itemDTO.setPrice(product.getPrice());
-            itemDTO.setImg(mainImageUrl);
-            itemDTO.setSlug(product.getSlug());
-            itemDTO.setColor(productColor.getColor().getColor());
-            itemDTO.setSize(productSize.getSize().getSize());
-            itemDTO.setQuantity(item.getQuantity());
-            itemDTO.setDiscount(item.getDiscount().doubleValue());
-            itemDTO.setTotal(item.getTotal());
+            OrderItemDTO itemDTO = getOrderItemDTO(item);
             itemDTOs.add(itemDTO);
         }
         orderDTO.setOrderItems(itemDTOs);
 
         return orderDTO;
+    }
+
+    @NotNull
+    private static OrderItemDTO getOrderItemDTO(OrderItem item) {
+        ProductSize productSize = item.getProductSize();
+        ProductColor productColor = productSize.getProductColor();
+        Product product = productColor.getProduct();
+
+        String mainImageUrl = product.getImg();
+
+        OrderItemDTO itemDTO = new OrderItemDTO();
+        itemDTO.setId(item.getId());
+        itemDTO.setProductName(product.getProductName());
+        itemDTO.setPrice(product.getPrice());
+        itemDTO.setImg(mainImageUrl);
+        itemDTO.setSlug(product.getSlug());
+        itemDTO.setColor(productColor.getColor().getColor());
+        itemDTO.setSize(productSize.getSize().getSize());
+        itemDTO.setQuantity(item.getQuantity());
+        itemDTO.setDiscount(item.getDiscount().doubleValue());
+        itemDTO.setTotal(item.getTotal());
+        return itemDTO;
     }
 }

@@ -37,7 +37,7 @@ public class AdminService {
         DashboardDTO dashboard = new DashboardDTO();
 
         dashboard.setTotalIncome(orderRepository.findAll().stream()
-                .map(order -> order.getTotal() != null ? order.getTotal() : BigDecimal.ZERO)
+                .map(order -> order.getTotal() != null && !order.getStatus().equals("Cancelled")? order.getTotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         dashboard.setTotalOrder(orderRepository.count());
