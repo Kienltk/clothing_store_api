@@ -71,9 +71,7 @@ public class ChatService {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setRole(user.getRole());
+        dto.setUsername(user.getUsername());
         return dto;
     }
 }
