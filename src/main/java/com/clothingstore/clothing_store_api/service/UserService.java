@@ -102,11 +102,13 @@ public class UserService {
         String address = user.getAddress();
         Date birthday = user.getDob();
 
-        return new InfoUserDTO(firstName, lastName, email, phoneNumber, address, birthday);
+        return new InfoUserDTO(user.getUsername(), user.getId(), firstName, lastName, email, phoneNumber, address, birthday);
     }
     public List<InfoUserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> new InfoUserDTO(
+                        user.getUsername(),
+                        user.getId(),
                         user.getFirstName(),
                         user.getLastName(),
                         user.getEmail(),
