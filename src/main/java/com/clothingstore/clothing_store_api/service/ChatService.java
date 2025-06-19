@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class ChatService {
         List<ChatMessage> messages = chatMessageRepository.findAll().stream()
                 .filter(m -> (m.getSender().getId().equals(userId) && m.getReceiver().getId().equals(otherId)) ||
                         (m.getSender().getId().equals(otherId) && m.getReceiver().getId().equals(userId)))
-                .collect(Collectors.toList());
+                .toList();
 
         return messages.stream()
                 .map(this::mapToDto)
@@ -66,7 +67,26 @@ public class ChatService {
 
         return dto;
     }
+    public List<UserDTO> getUsersWithAdminChat(Long adminId) {
+        if (adminId == null) {
+            return Collections.emptyList();
+        }
 
+        List<ChatMessage> messages = chatMessageRepository.findAll().stream()
+                .filter(m -> m.getSender().getId().equals(adminId) || m.getReceiver().getId().equals(adminId))
+                .toList();
+
+        return messages.stream()
+                .map(m -> m.getSender().getId().equals(adminId) ? m.getReceiver() : m.getSender())
+                .distinct()
+                .map(this::mapUserToDto)
+                .collect(Collectors.toList());
+    }
+    public Long getAdminIdByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getId();
+    }
     private UserDTO mapUserToDto(User user) {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
