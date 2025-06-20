@@ -1,6 +1,5 @@
 package com.clothingstore.clothing_store_api.util;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -17,7 +16,9 @@ import java.util.Map;
 public class JwtUtil {
 
     private Key SECRET_KEY;
-    private final Dotenv dotenv;
+
+    @Value("${jwt.secretKey}")
+    private String secretKey;
 
     @Value("${jwt.accessTokenExpirationMs:3600000}")
     private long accessTokenExpirationMs;
@@ -25,20 +26,12 @@ public class JwtUtil {
     @Value("${jwt.refreshTokenExpirationMs:604800000}")
     private long refreshTokenExpirationMs;
 
-    public JwtUtil() {
-        dotenv = Dotenv.configure()
-                .directory("./")
-                .ignoreIfMissing()
-                .load();
-    }
-
     @PostConstruct
     private void initSecretKey() {
-        String secret = dotenv.get("JWT_SECRET_KEY");
-        if (secret == null || secret.length() < 32) {
+        if (secretKey == null || secretKey.length() < 32) {
             throw new IllegalArgumentException("JWT_SECRET_KEY must be at least 32 characters long");
         }
-        this.SECRET_KEY = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.SECRET_KEY = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String username, String role) {
