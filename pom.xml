@@ -94,6 +94,13 @@
             <artifactId>java-dotenv</artifactId>
             <version>5.2.2</version>
         </dependency>
+                     <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-bom</artifactId>
+            <version>0.12.6</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
 <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
