@@ -42,10 +42,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
@@ -97,18 +93,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if you use Gson -->
-            <version>0.11.5</version>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -116,11 +112,11 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.8.8</version>
         </dependency>
-
     </dependencies>
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -169,7 +165,7 @@
                             <classpathScope>compile</classpathScope>
                             <arguments>
                                 <argument>-cp</argument>
-                                <argument>target/classes${path.separator}${project.build.directory}/dependency/*</argument>
+                                <argument>target/classes;${project.build.directory}/dependency/*</argument>
                                 <argument>com.clothingstore.clothing_store_api.config.LoadEnv</argument>
                             </arguments>
                         </configuration>
@@ -185,7 +181,7 @@
                             <classpathScope>compile</classpathScope>
                             <arguments>
                                 <argument>-cp</argument>
-                                <argument>target/classes${path.separator}${project.build.directory}/dependency/*</argument>
+                                <argument>target/classes;${project.build.directory}/dependency/*</argument>
                                 <argument>com.clothingstore.clothing_store_api.config.LoadEnv</argument>
                             </arguments>
                         </configuration>
@@ -198,13 +194,6 @@
                         <version>5.2.2</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.clothingstore.clothing_store_api.ClothingStoreApiApplication</mainClass>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
