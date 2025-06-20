@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class EnvConfig {
     static {
-        DotenvUtil.loadDotenv();
+//        DotenvUtil.loadDotenv();
     }
 }
