@@ -28,13 +28,16 @@ public class JwtUtil {
 
     @PostConstruct
     private void initSecretKey() {
-        if (secretKey == null || secretKey.length() < 32) {
-            throw new IllegalArgumentException("JWT_SECRET_KEY must be at least 32 characters long");
+        if (secretKey == null || secretKey.trim().isEmpty() || secretKey.length() < 32) {
+            throw new IllegalArgumentException("JWT_SECRET_KEY must be at least 32 characters long and not null/empty");
         }
         this.SECRET_KEY = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String username, String role) {
+        if (username == null || username.trim().isEmpty() || role == null || role.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username and role must not be null or empty");
+        }
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         return Jwts.builder()
@@ -47,6 +50,9 @@ public class JwtUtil {
     }
 
     public String generateRefreshToken(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username must not be null or empty");
+        }
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
@@ -56,11 +62,17 @@ public class JwtUtil {
     }
 
     public boolean isTokenValid(String token, String username) {
+        if (token == null || token.trim().isEmpty() || username == null || username.trim().isEmpty()) {
+            return false;
+        }
         final String extractedUsername = extractUsername(token);
         return extractedUsername.equals(username) && !isTokenExpired(token);
     }
 
     public String extractUsername(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Token must not be null or empty");
+        }
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(SECRET_KEY)
@@ -74,6 +86,9 @@ public class JwtUtil {
     }
 
     private boolean isTokenExpired(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return true;
+        }
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(SECRET_KEY)
@@ -88,6 +103,9 @@ public class JwtUtil {
     }
 
     public Map<String, String> generateTokenPair(String username, String role) {
+        if (username == null || username.trim().isEmpty() || role == null || role.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username and role must not be null or empty");
+        }
         Map<String, String> tokens = new HashMap<>();
         tokens.put("access_token", generateToken(username, role));
         tokens.put("refresh_token", generateRefreshToken(username));
