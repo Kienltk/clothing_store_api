@@ -22,17 +22,6 @@
     </properties>
 
 
-<dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-bom</artifactId>
-            <version>0.11.5</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-    </dependencies>
-</dependencyManagement>
 
     <repositories>
         <repository>
@@ -101,20 +90,26 @@
         </dependency>
 
         <!-- ✅ JJWT chính xác -->
+<!-- KHÔNG DÙNG jjwt-bom nữa -->
+
 <dependency>
     <groupId>io.jsonwebtoken</groupId>
     <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
 </dependency>
 <dependency>
     <groupId>io.jsonwebtoken</groupId>
     <artifactId>jjwt-impl</artifactId>
+    <version>0.11.5</version>
     <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>io.jsonwebtoken</groupId>
     <artifactId>jjwt-jackson</artifactId>
+    <version>0.11.5</version>
     <scope>runtime</scope>
 </dependency>
+
 
         <dependency>
             <groupId>org.springdoc</groupId>
