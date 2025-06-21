@@ -85,10 +85,14 @@ public class SecurityConfig {
 @Bean
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("*")); // Cho phép mọi domain
+
+    configuration.setAllowedOrigins(Arrays.asList(
+        "https://clothes-store-fe-5.onrender.com"  
+    ));
+
+    configuration.setAllowCredentials(true);  
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
-    configuration.setAllowCredentials(false);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
