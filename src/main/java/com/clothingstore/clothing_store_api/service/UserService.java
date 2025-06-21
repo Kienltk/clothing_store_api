@@ -12,7 +12,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -102,11 +101,13 @@ public class UserService {
         String address = user.getAddress();
         Date birthday = user.getDob();
 
-        return new InfoUserDTO(firstName, lastName, email, phoneNumber, address, birthday);
+        return new InfoUserDTO(user.getUsername(), user.getId(), firstName, lastName, email, phoneNumber, address, birthday);
     }
     public List<InfoUserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> new InfoUserDTO(
+                        user.getUsername(),
+                        user.getId(),
                         user.getFirstName(),
                         user.getLastName(),
                         user.getEmail(),
