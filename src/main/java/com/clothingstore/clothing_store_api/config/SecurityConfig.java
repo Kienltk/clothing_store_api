@@ -85,10 +85,10 @@ public class SecurityConfig {
 @Bean
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("*")); // Cho phép tất cả domain
+    configuration.setAllowedOrigins(Arrays.asList("*")); // Cho phép mọi domain
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
-    // Loại bỏ setAllowCredentials nếu không cần thiết
+    configuration.setAllowCredentials(false);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
