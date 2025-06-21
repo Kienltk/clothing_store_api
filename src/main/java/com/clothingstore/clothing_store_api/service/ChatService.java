@@ -56,17 +56,26 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
-    private ChatMessageDTO mapToDto(ChatMessage message) {
-        ChatMessageDTO dto = new ChatMessageDTO();
-        dto.setId(message.getId());
-        dto.setContent(message.getContent());
-        dto.setTimestamp(message.getTimestamp());
+private ChatMessageDTO mapToDto(ChatMessage message) {
+    ChatMessageDTO dto = new ChatMessageDTO();
+    dto.setId(message.getId());
+    dto.setContent(message.getContent());
 
-        dto.setSender(mapUserToDto(message.getSender()));
-        dto.setReceiver(mapUserToDto(message.getReceiver()));
 
-        return dto;
+    if (message.getTimestamp() != null) {
+        // Giả sử timestamp trong DB là UTC
+        var vietnamTime = message.getTimestamp()
+                .atZone(java.time.ZoneOffset.UTC)
+                .withZoneSameInstant(java.time.ZoneId.of("Asia/Ho_Chi_Minh"))
+                .toLocalDateTime();
+        dto.setTimestamp(vietnamTime);
     }
+
+    dto.setSender(mapUserToDto(message.getSender()));
+    dto.setReceiver(mapUserToDto(message.getReceiver()));
+
+    return dto;
+}
     public List<UserDTO> getUsersWithAdminChat(Long adminId) {
         if (adminId == null) {
             return Collections.emptyList();
