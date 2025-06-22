@@ -8,6 +8,8 @@ import com.clothingstore.clothing_store_api.util.CategoryUtil;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,7 +40,7 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
         this.productSizeRepository = productSizeRepository;
     }
-
+    @Cacheable(value = "productsByCategory", key = "#slug")
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
         Long categoryId = null;
         if (slug != null) {
@@ -55,7 +57,7 @@ public class ProductService {
         }
         return categoryProducts;
     }
-
+    @Cacheable(value = "searchResults", key = "#productName")
     public SearchProductDTO searchProducts(String productName, Long userId) {
         List<Product> products = productRepository.findByProductNameContainingIgnoreCase(productName.trim());
         Map<String, Object> data = new HashMap<>();
@@ -76,7 +78,7 @@ public class ProductService {
 
         return new SearchProductDTO(message, data);
     }
-
+    @Cacheable(value = "productDetails", key = "#slug")
     public ProductDetailDTO getProductDetails(String slug, Long userId) {
         Long productId = productRepository.findProductBySlug(slug).getId();
         Product product = productRepository.findProductById(productId);
@@ -125,6 +127,7 @@ public class ProductService {
         return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite, slug);
     }
 
+    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
     @Transactional
     public void addNewProduct(CreateProductDTO dto, Long userId) {
         Product product = new Product();
@@ -148,6 +151,7 @@ public class ProductService {
     }
 
 
+    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
     @Transactional
     public void editProduct(Long productId, CreateProductDTO dto, Long userId) {
         Product product = productRepository.findById(productId)
@@ -176,6 +180,7 @@ public class ProductService {
         mapProductToDetails(product, userId, Collections.emptyList());
     }
 
+    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
     @Transactional
     public void deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
