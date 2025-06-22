@@ -40,7 +40,8 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
         this.productSizeRepository = productSizeRepository;
     }
-@Cacheable(value = "productsByCategory", key = "#slug != null ? #slug : 'default'")
+
+    @Cacheable(value = "productsByCategory", key = "{#userId != null ? #userId : 'guest', #slug != null ? #slug : 'default'}")
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
         Long categoryId = null;
         if (slug != null) {
@@ -57,7 +58,8 @@ public class ProductService {
         }
         return categoryProducts;
     }
-    @Cacheable(value = "searchResults", key = "#productName")
+
+    @Cacheable(value = "searchResults", key = "{#userId != null ? #userId : 'guest', #productName != null ? #productName : 'default'}")
     public SearchProductDTO searchProducts(String productName, Long userId) {
         List<Product> products = productRepository.findByProductNameContainingIgnoreCase(productName.trim());
         Map<String, Object> data = new HashMap<>();
@@ -78,7 +80,8 @@ public class ProductService {
 
         return new SearchProductDTO(message, data);
     }
-    @Cacheable(value = "productDetails", key = "#slug")
+
+    @Cacheable(value = "productDetails", key = "{#userId != null ? #userId : 'guest', #slug != null ? #slug : 'default'}")
     public ProductDetailDTO getProductDetails(String slug, Long userId) {
         Long productId = productRepository.findProductBySlug(slug).getId();
         Product product = productRepository.findProductById(productId);
@@ -127,7 +130,7 @@ public class ProductService {
         return new ProductDTO(id, productName, price, discount, status, mainImageUrl, stockDetailDTO, isFavorite, slug);
     }
 
-    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
+    @CacheEvict(value = {"productDetails", "productsByCategory", "searchResults"}, allEntries = true)
     @Transactional
     public void addNewProduct(CreateProductDTO dto, Long userId) {
         Product product = new Product();
@@ -143,15 +146,13 @@ public class ProductService {
         Product finalProduct = product;
         Product newProduct = productRepository.findById(finalProduct.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + finalProduct.getId()));
-        System.out.println("Loaded product colors size: " + newProduct.getProductColors().size());
+        log.info("Loaded product colors size: {}", newProduct.getProductColors().size());
 
         ProductDTO result = mapProductToDetails(newProduct, userId, Collections.emptyList());
-        System.out.println("Stock details in response: " + result.getStockDetails());
-
+        log.info("Stock details in response: {}", result.getStockDetails());
     }
 
-
-    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
+    @CacheEvict(value = {"productDetails", "productsByCategory", "searchResults"}, allEntries = true)
     @Transactional
     public void editProduct(Long productId, CreateProductDTO dto, Long userId) {
         Product product = productRepository.findById(productId)
@@ -180,7 +181,7 @@ public class ProductService {
         mapProductToDetails(product, userId, Collections.emptyList());
     }
 
-    @CacheEvict(value = { "productDetails", "productsByCategory", "searchResults" }, allEntries = true)
+    @CacheEvict(value = {"productDetails", "productsByCategory", "searchResults"}, allEntries = true)
     @Transactional
     public void deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
@@ -213,42 +214,42 @@ public class ProductService {
 
     private void handleVariants(List<StockDetailDTO> variants, Product product) {
         if (variants == null || variants.isEmpty()) {
-            System.out.println("No variants provided");
+            log.info("No variants provided");
             return;
         }
 
         for (StockDetailDTO variant : variants) {
-            System.out.println("Processing variant: " + variant.getColor());
+            log.info("Processing variant: {}", variant.getColor());
             Color color = colorRepository.findByColor(variant.getColor())
-                    .orElseThrow(() -> new RuntimeException("Color not found: " + variant.getColor()));
+                    .orElseThrow(() -> new RuntimeException("Color not found: {}", variant.getColor()));
 
             ProductColor productColor = new ProductColor();
             productColor.setProduct(product);
             productColor.setColor(color);
             productColor = productColorRepository.saveAndFlush(productColor);
-            System.out.println("Saved ProductColor ID: " + productColor.getId());
+            log.info("Saved ProductColor ID: {}", productColor.getId());
 
             if (variant.getImg() != null && !variant.getImg().isEmpty()) {
                 ProductImage image = new ProductImage();
                 image.setImageUrl(variant.getImg());
                 image.setProductColor(productColor);
                 productImageRepository.saveAndFlush(image);
-                System.out.println("Saved ProductImage: " + variant.getImg());
+                log.info("Saved ProductImage: {}", variant.getImg());
             }
 
             if (variant.getSizes() != null && !variant.getSizes().isEmpty()) {
                 for (SizeStockDTO sizeDTO : variant.getSizes()) {
                     Size size = sizeRepository.findBySize(sizeDTO.getSize())
-                            .orElseThrow(() -> new RuntimeException("Size not found: " + sizeDTO.getSize()));
+                            .orElseThrow(() -> new RuntimeException("Size not found: {}", sizeDTO.getSize()));
                     ProductSize productSize = new ProductSize();
                     productSize.setProductColor(productColor);
                     productSize.setSize(size);
                     productSize.setStock(sizeDTO.getStock());
                     productSizeRepository.saveAndFlush(productSize);
-                    System.out.println("Saved ProductSize: " + sizeDTO.getSize() + ", stock: " + sizeDTO.getStock());
+                    log.info("Saved ProductSize: {}, stock: {}", sizeDTO.getSize(), sizeDTO.getStock());
                 }
             } else {
-                System.out.println("No sizes provided for variant: " + variant.getColor());
+                log.info("No sizes provided for variant: {}", variant.getColor());
             }
         }
     }
@@ -284,8 +285,7 @@ public class ProductService {
                 .findByProductColorProductIdAndProductColorColorColorAndSizeSize(productId, color, sizeName);
 
         if (productSizeOpt.isEmpty()) {
-            throw new RuntimeException("Not found with product id " + productId +
-                    ", color=" + color + ", size=" + sizeName);
+            throw new RuntimeException("Not found with product id {} , color={}, size={}", productId, color, sizeName);
         }
 
         return productSizeOpt.get().getId();
