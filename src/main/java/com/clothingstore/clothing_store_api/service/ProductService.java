@@ -40,7 +40,7 @@ public class ProductService {
         this.favoriteRepository = favoriteRepository;
         this.productSizeRepository = productSizeRepository;
     }
-    @Cacheable(value = "productsByCategory", key = "#slug")
+@Cacheable(value = "productsByCategory", key = "#slug != null ? #slug : 'default'")
     public Map<String, List<ProductDTO>> getProductsByCategory(Long userId, String slug) {
         Long categoryId = null;
         if (slug != null) {
