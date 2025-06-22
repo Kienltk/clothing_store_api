@@ -221,7 +221,7 @@ public class ProductService {
         for (StockDetailDTO variant : variants) {
             log.info("Processing variant: {}", variant.getColor());
             Color color = colorRepository.findByColor(variant.getColor())
-                    .orElseThrow(() -> new RuntimeException("Color not found: {}", variant.getColor()));
+                    .orElseThrow(RuntimeException::new);
 
             ProductColor productColor = new ProductColor();
             productColor.setProduct(product);
@@ -240,7 +240,7 @@ public class ProductService {
             if (variant.getSizes() != null && !variant.getSizes().isEmpty()) {
                 for (SizeStockDTO sizeDTO : variant.getSizes()) {
                     Size size = sizeRepository.findBySize(sizeDTO.getSize())
-                            .orElseThrow(() -> new RuntimeException("Size not found: {}", sizeDTO.getSize()));
+                            .orElseThrow(RuntimeException::new);
                     ProductSize productSize = new ProductSize();
                     productSize.setProductColor(productColor);
                     productSize.setSize(size);
@@ -285,7 +285,8 @@ public class ProductService {
                 .findByProductColorProductIdAndProductColorColorColorAndSizeSize(productId, color, sizeName);
 
         if (productSizeOpt.isEmpty()) {
-            throw new RuntimeException("Not found with product id {} , color={}, size={}", productId, color, sizeName);
+            throw new RuntimeException("Not found with product id " + productId +
+                    ", color=" + color + ", size=" + sizeName);
         }
 
         return productSizeOpt.get().getId();
