@@ -8,6 +8,8 @@ import com.clothingstore.clothing_store_api.repository.CategoryRepository;
 import com.clothingstore.clothing_store_api.repository.FavoriteRepository;
 import com.clothingstore.clothing_store_api.repository.ProductRepository;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class FavoriteService {
         this.productService = productService;
     }
 
+    @Cacheable(value = "favorites", key = "#userId")
     public List<ProductDTO> getFavoriteProducts(Long userId) {
         List<Favorite> favorites = favoriteRepository.findByUserId(userId);
         List<ProductDTO> favoriteProducts = new ArrayList<>();
@@ -34,10 +37,10 @@ public class FavoriteService {
             ProductDTO product = productService.mapProductToDetails(favorite.getProduct(), userId, favorites);
             favoriteProducts.add(product);
         }
-
         return favoriteProducts;
     }
 
+    @CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, key = "#userId")
     public Map<String, String> addFavorite(Long userId, Long productId) {
         Map<String, String> response = new HashMap<>();
 
@@ -69,6 +72,7 @@ public class FavoriteService {
     }
 
     @Transactional
+    @CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, key = "#userId")
     public Map<String, String> removeFavorite(Long userId, Long productId) {
         Map<String, String> response = new HashMap<>();
         String checkFavorite = checkFavorite(userId, productId);
