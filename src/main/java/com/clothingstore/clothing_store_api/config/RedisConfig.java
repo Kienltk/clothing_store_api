@@ -1,8 +1,5 @@
 package com.clothingstore.clothing_store_api.config;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
-import io.lettuce.core.resource.ClientResources;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisPassword;
@@ -20,14 +17,18 @@ public class RedisConfig {
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-        redisConfig.setHostName("bright-iguana-25530.upstash.io"); 
-        redisConfig.setPort(6379); 
-        redisConfig.setPassword(RedisPassword.of("AWO6AAIjcDFiNWY2MWRjNTRmMzI0N2RkYjFjMmRjYzc5OTA3MGUzOXAxMA")); 
+        redisConfig.setHostName("bright-iguana-25530.upstash.io");
+        redisConfig.setPort(6379);
+        redisConfig.setPassword(RedisPassword.of("AWO6AAIjcDFiNWY2MWRjNTRmMzI0N2RkYjFjMmRjYzc5OTA3MGUzOXAxMA"));
 
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .useSsl()
-                .commandTimeout(Duration.ofSeconds(60))
-                .build();
+       
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder =
+                LettuceClientConfiguration.builder();
+
+        builder.useSsl(); 
+        builder.commandTimeout(Duration.ofSeconds(60)); 
+
+        LettuceClientConfiguration clientConfig = builder.build();
 
         return new LettuceConnectionFactory(redisConfig, clientConfig);
     }
