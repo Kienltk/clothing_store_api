@@ -8,7 +8,11 @@ import com.clothingstore.clothing_store_api.entity.*;
 import com.clothingstore.clothing_store_api.repository.OrderRepository;
 import com.clothingstore.clothing_store_api.repository.ProductSizeRepository;
 import com.clothingstore.clothing_store_api.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,6 +35,8 @@ public class OrderService {
         this.productService = productService;
     }
 
+    @Transactional
+    @CacheEvict(value = {"orders", "productStock"}, allEntries = true)
     public OrderDTO addOrder(Long userId, OrderRequestDTO orderRequest) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
@@ -42,7 +48,6 @@ public class OrderService {
         order.setUser(user);
         order.setPaymentTime(new Date());
         order.setOrderItems(new ArrayList<>());
-
 
         BigDecimal orderTotal = BigDecimal.ZERO;
         for (OrderItemRequestDTO itemRequestDTO : orderRequest.getOrderItems()) {
@@ -86,6 +91,7 @@ public class OrderService {
         return toOrderDTO(order);
     }
 
+    @Cacheable(value = "orders", key = "#userId != null ? #userId : 'all'")
     public List<OrderDTO> getOrders(Long userId) {
         List<Order> orders = userId == null ? orderRepository.findAll() : orderRepository.findByUserId(userId);
         List<OrderDTO> orderDTOs = new ArrayList<>();
@@ -95,6 +101,9 @@ public class OrderService {
         return orderDTOs;
     }
 
+    @Transactional
+    @CachePut(value = "orders", key = "#orderId")
+    @CacheEvict(value = "productStock", allEntries = true)
     public OrderDTO updateStatusOrder(Long orderId, String status) {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isEmpty()) {
@@ -108,6 +117,8 @@ public class OrderService {
                 productSize.setStock(productSize.getStock() + item.getQuantity());
                 productSizeRepository.save(productSize);
             }
+        } else {
+            order.setStatus(status);
         }
 
         orderRepository.save(order);
