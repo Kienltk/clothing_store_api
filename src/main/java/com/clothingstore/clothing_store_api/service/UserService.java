@@ -10,6 +10,9 @@ import com.clothingstore.clothing_store_api.repository.UserRepository;
 import com.clothingstore.clothing_store_api.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +35,7 @@ public class UserService {
         this.tokenService = tokenService;
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public void register(RegisterDTO registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new ValidationException("Username already exists");
@@ -83,6 +87,8 @@ public class UserService {
         response.setRefreshToken(tokens.get("refresh_token"));
         return response;
     }
+
+    @CacheEvict(value = "users", key = "#user.id")
     public void changePassword(User user, String oldPassword, String newPassword) {
         if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Old password is incorrect");
@@ -91,6 +97,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Cacheable(value = "users", key = "#id")
     public InfoUserDTO getInfoUser(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -103,6 +110,8 @@ public class UserService {
 
         return new InfoUserDTO(user.getUsername(), user.getId(), firstName, lastName, email, phoneNumber, address, birthday);
     }
+
+    @Cacheable(value = "users", key = "'all'")
     public List<InfoUserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> new InfoUserDTO(
@@ -118,6 +127,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @CachePut(value = "users", key = "#user.id")
     public void editInfoUser(User user, InfoUserDTO infoUserDTO) {
         user.setFirstName(infoUserDTO.getFirstName());
         user.setLastName(infoUserDTO.getLastName());
@@ -129,10 +139,10 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         userRepository.delete(user);
     }
-
 }
