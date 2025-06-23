@@ -29,18 +29,20 @@ public class FavoriteService {
         this.productService = productService;
     }
 
-    @Cacheable(value = "favorites", key = "#userId")
-    public List<ProductDTO> getFavoriteProducts(Long userId) {
-        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
-        List<ProductDTO> favoriteProducts = new ArrayList<>();
-        for (Favorite favorite : favorites) {
-            ProductDTO product = productService.mapProductToDetails(favorite.getProduct(), userId, favorites);
-            favoriteProducts.add(product);
-        }
-        return favoriteProducts;
+@Cacheable(value = "favorites", key = "#userId")
+public List<ProductDTO> getFavoriteProducts(Long userId) {
+    log.info("Fetching favorites for userId: {}", userId);
+    List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+    List<ProductDTO> favoriteProducts = new ArrayList<>();
+    for (Favorite favorite : favorites) {
+        ProductDTO product = productService.mapProductToDetails(favorite.getProduct(), userId, favorites);
+        favoriteProducts.add(product);
     }
+    log.info("Returning {} favorite products for userId: {}", favoriteProducts.size(), userId);
+    return favoriteProducts;
+}
 
-    @CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, key = "#userId")
+  @CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, allEntries = true)
     public Map<String, String> addFavorite(Long userId, Long productId) {
         Map<String, String> response = new HashMap<>();
 
@@ -72,7 +74,7 @@ public class FavoriteService {
     }
 
     @Transactional
-    @CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, key = "#userId")
+@CacheEvict(value = {"favorites", "productsByCategory", "productDetails", "searchResults"}, allEntries = true)
     public Map<String, String> removeFavorite(Long userId, Long productId) {
         Map<String, String> response = new HashMap<>();
         String checkFavorite = checkFavorite(userId, productId);
